@@ -135,6 +135,8 @@ para la contraseña/sesión).
   - Usar clases utilitarias inline en los templates.
   - No escribir CSS/SCSS custom salvo casos puntuales que Tailwind no resuelva bien (animaciones complejas, etc.).
   - Es indistinto si los archivos de estilos de componente están en `.css` o `.scss`; no es un criterio relevante para este proyecto.
+- **Prime NG** como única librería de componentes UI:
+  - Usar en caso de que el prompt lo requiera.
 
 ### Arquitectura de componentes
 - Todos los componentes deben ser **standalone**.
@@ -162,6 +164,7 @@ app/
 │   │   └── configuracion/
 │   └── shared/       # Componentes reutilizables entre features (botones, cards genéricas, etc.)
 ├── directives/    # Directivas custom (si las hubiera)
+├── guards/        # Guards
 ├── services/      # Servicios (mayormente HTTP, conexión a Supabase)
 ```
 
@@ -179,7 +182,7 @@ Al responder en el chat, usar español técnico controlado, siguiendo estas norm
 - Nombres concisos y descriptivos (ej: `obtenerFuncionesActivas`, `butacaSeleccionada`).
   Evitar nombres abreviados que sacrifiquen legibilidad (ej: no usar `func`, `btc`, `usr`).
 
-  ### Convención de agrupación de componentes
+## Convención de agrupación de componentes
 - Cada carpeta dentro de `components/` corresponde a una feature/vista
   concreta (ej: `seleccion-butaca`, no `botones` ni `paso-2`).
 - Un componente que se usa en más de una feature va a `components/shared/`.
@@ -187,3 +190,6 @@ Al responder en el chat, usar español técnico controlado, siguiendo estas norm
   con un formulario y una tabla), estos van anidados dentro de la carpeta
   de esa feature, no sueltos en la raíz de `components/`.
 - Nomenclatura de carpetas: kebab-case, igual que el resto del proyecto.
+
+## Convención de modelos con esquemas de base de datos
+- Dentro de la carpeta `supabase/migrations` estan todos los .sql de las tablas ya ejecutados en Supabase

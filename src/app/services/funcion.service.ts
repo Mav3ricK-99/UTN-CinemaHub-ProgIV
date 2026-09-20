@@ -2,13 +2,23 @@ import { Injectable } from '@angular/core';
 
 import { Funcion } from '../classes/funcion';
 import { FormatoPelicula, IdiomaPelicula, Pelicula } from '../classes/pelicula';
-import { generarIdsButacas, Sala } from '../classes/sala';
+import { generarButacas, generarIdsButacas, Sala } from '../classes/sala';
 
 const MILISEGUNDOS_POR_MINUTO = 60 * 1000;
 const MILISEGUNDOS_POR_HORA = 60 * MILISEGUNDOS_POR_MINUTO;
 
-const salaUno: Sala = { nombre: 'Sala 1', butacas: [] };
-const salaDos: Sala = { nombre: 'Sala 2', butacas: [] };
+/** Criterio de prueba: filas J a M, columnas 9 a 20. Reemplazar al definir las butacas especiales. */
+function esButacaEspecialDePrueba(idButaca: string): boolean {
+  const fila = idButaca[0];
+  const columna = Number(idButaca.slice(1));
+  return fila >= 'J' && fila <= 'M' && columna >= 9 && columna <= 20;
+}
+
+const salaUno: Sala = { nombre: 'Sala 1', butacas: generarButacas(esButacaEspecialDePrueba) };
+const salaDos: Sala = { nombre: 'Sala 2', butacas: generarButacas(esButacaEspecialDePrueba) };
+
+/** Butacas ocupadas de prueba para la primera función, incluidas algunas especiales. */
+const butacasOcupadasDePrueba = ['A1', 'A2', 'B7', 'C15', 'F3', 'H10', 'J12', 'K14', 'K15', 'L9', 'M20', 'P22', 'S5', 'T28'];
 
 const peliculas: Pelicula[] = [
   {
@@ -97,6 +107,15 @@ export class FuncionService {
   }
 
   /**
+   * Devuelve la función con el id indicado, o `null` si no existe.
+   * Usa datos de prueba hasta definir las tablas en Supabase.
+   */
+  async obtenerFuncionPorId(id: string): Promise<Funcion | null> {
+    const funciones = await this.obtenerFuncionesProximas();
+    return funciones.find((funcion) => funcion.id === id) ?? null;
+  }
+
+  /**
    * Devuelve las funciones que ya finalizaron, de la más reciente a la más antigua.
    * Usa datos de prueba hasta definir las tablas en Supabase.
    */
@@ -136,7 +155,8 @@ export class FuncionService {
         fechaInicio,
         fechaFin,
         // La segunda función tiene todas las butacas ocupadas para probar el botón deshabilitado.
-        butacasReservadas: indice === 1 ? generarIdsButacas() : [],
+        butacasReservadas:
+          indice === 1 ? generarIdsButacas() : indice === 0 ? butacasOcupadasDePrueba : [],
       };
     });
 

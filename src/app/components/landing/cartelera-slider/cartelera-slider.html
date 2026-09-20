@@ -65,14 +65,23 @@
           </p>
         </div>
 
-        <button
-          type="button"
-          class="shrink-0 self-start rounded-full bg-red-600 px-8 py-3 text-base font-bold transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-neutral-400 sm:self-end"
-          [disabled]="estaAgotada(funcion)"
-          [attr.title]="estaAgotada(funcion) ? 'No quedan butacas disponibles' : null"
-        >
-          Reservar ahora
-        </button>
+        @if (estaAgotada(funcion)) {
+          <button
+            type="button"
+            class="shrink-0 self-start cursor-not-allowed rounded-full bg-white/15 px-8 py-3 text-base font-bold text-neutral-400 sm:self-end"
+            disabled
+            title="No quedan butacas disponibles"
+          >
+            Reservar ahora
+          </button>
+        } @else {
+          <a
+            [routerLink]="['/reserva', funcion.id]"
+            class="shrink-0 self-start cursor-pointer rounded-full bg-red-600 px-8 py-3 text-base font-bold transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-white sm:self-end"
+          >
+            Reservar ahora
+          </a>
+        }
       </div>
     </article>
   }

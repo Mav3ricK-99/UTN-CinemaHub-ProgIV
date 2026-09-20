@@ -1,0 +1,90 @@
+<main class="min-h-screen bg-neutral-950 px-6 pb-16 pt-28 text-white sm:px-12 lg:px-20">
+  @if (funcion.isLoading()) {
+    <div class="h-[600px] max-w-sm animate-pulse rounded-2xl bg-neutral-900"></div>
+  } @else if (funcion.error()) {
+    <p class="py-24 text-center text-neutral-400">No se pudo cargar la función.</p>
+  } @else {
+    @if (funcion.value(); as funcionActual) {
+      <div class="flex flex-col gap-8 lg:flex-row">
+        <aside
+          class="flex w-full shrink-0 flex-col gap-5 lg:sticky lg:top-28 lg:w-96 lg:self-start"
+          aria-label="Detalle de la función"
+        >
+          <img
+            class="aspect-video w-full rounded-2xl object-cover"
+            [src]="funcionActual.pelicula.imagenUrl"
+            [alt]="'Imagen de ' + funcionActual.pelicula.nombre"
+          />
+
+          <div class="flex flex-col gap-3">
+            <h1 class="text-3xl font-extrabold leading-tight">{{ funcionActual.pelicula.nombre }}</h1>
+            <p class="text-sm text-neutral-300">{{ funcionActual.pelicula.sinopsis }}</p>
+            <p class="text-sm text-neutral-400">
+              Idioma: <span class="font-semibold text-white">{{ funcionActual.pelicula.idioma }}</span>
+            </p>
+            <ul class="flex flex-wrap gap-2 text-xs">
+              @for (categoria of funcionActual.pelicula.categorias; track categoria.nombre) {
+                <li class="rounded-full border border-white/30 px-3 py-1">{{ categoria.nombre }}</li>
+              }
+            </ul>
+            <p class="text-sm text-neutral-400">
+              Sala: <span class="font-semibold text-white">{{ funcionActual.sala.nombre }}</span>
+            </p>
+          </div>
+
+          <p class="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-3 text-sm">
+            <svg
+              class="size-5 shrink-0 text-red-500"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+            <span>
+              La función comienza en <span class="font-semibold">{{ tiempoRestante() }}</span>
+            </span>
+          </p>
+
+          @if (butacasSeleccionadas().length > 0) {
+            <div class="flex flex-col gap-2">
+              <p class="text-sm font-semibold">Butacas seleccionadas:</p>
+              <ul class="flex flex-wrap gap-2 text-xs">
+                @for (butaca of butacasSeleccionadas(); track butaca) {
+                  <li class="rounded-full bg-red-600 px-3 py-1 font-semibold">{{ butaca }}</li>
+                }
+              </ul>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="w-full cursor-pointer rounded-full bg-red-600 px-8 py-3 text-base font-bold transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-neutral-400"
+            [disabled]="butacasSeleccionadas().length === 0"
+          >
+            Reservar butacas
+          </button>
+        </aside>
+
+        <section class="min-w-0 flex-1" aria-label="Selección de butacas">
+          <app-mapa-butacas
+            [sala]="funcionActual.sala"
+            [butacasReservadas]="funcionActual.butacasReservadas"
+            [(butacasSeleccionadas)]="butacasSeleccionadas"
+          />
+        </section>
+      </div>
+    } @else {
+      <div class="py-24 text-center text-neutral-400">
+        <p>La función no existe.</p>
+        <a routerLink="/" class="mt-4 inline-block font-semibold text-red-500 hover:text-red-400">Volver a la cartelera</a>
+      </div>
+    }
+  }
+</main>

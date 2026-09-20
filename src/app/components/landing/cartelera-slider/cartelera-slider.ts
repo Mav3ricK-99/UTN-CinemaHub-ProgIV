@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, effect, input, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { estaAgotada, Funcion } from '../../../classes/funcion';
 
@@ -7,7 +8,7 @@ const INTERVALO_AUTOAVANCE_MS = 7000;
 
 @Component({
   selector: 'app-cartelera-slider',
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './cartelera-slider.html',
 })
 export class CarteleraSlider {

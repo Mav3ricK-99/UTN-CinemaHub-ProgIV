@@ -1,0 +1,72 @@
+<div class="mx-auto flex w-full max-w-4xl flex-col gap-8">
+  <div class="relative px-6" aria-hidden="true">
+    <svg
+      class="h-10 w-full"
+      viewBox="0 0 800 40"
+      preserveAspectRatio="none"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id="resplandor-pantalla" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#a5b4fc" stop-opacity="0.25" />
+          <stop offset="1" stop-color="#a5b4fc" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+      <path d="M0 30 Q400 -10 800 30 L800 40 L0 40 Z" fill="url(#resplandor-pantalla)" />
+      <path
+        d="M0 30 Q400 -10 800 30"
+        stroke="#a5b4fc"
+        stroke-width="2"
+        vector-effect="non-scaling-stroke"
+      />
+    </svg>
+    <span class="absolute inset-x-0 top-0 text-center text-xs font-bold uppercase tracking-widest">Pantalla</span>
+  </div>
+
+  <div class="flex flex-col gap-0.5" role="group" aria-label="Mapa de butacas">
+    @for (fila of filas(); track fila.letra) {
+      <div class="flex items-center gap-3" role="group" [attr.aria-label]="'Fila ' + fila.letra">
+        <span class="w-4 shrink-0 text-center text-xs font-bold text-neutral-300" aria-hidden="true">{{ fila.letra }}</span>
+
+        @for (bloque of fila.bloques; track $index) {
+          <div class="flex min-w-0 gap-0.5" [style.flex]="bloque.length + ' 1 0'">
+            @for (butaca of bloque; track butaca.id) {
+              <p-button
+                class="flex min-w-0 flex-1"
+                icon="pi pi-stop"
+                [text]="true"
+                size="small"
+                [ariaLabel]="descripcionButaca(butaca)"
+                [attr.title]="butaca.id"
+                [disabled]="butaca.deshabilitada"
+                [styleClass]="
+                  'w-full !p-0.5 hover:!bg-white/10 disabled:opacity-100 disabled:cursor-not-allowed ' +
+                  claseColorEstado[butaca.estado]
+                "
+                (onClick)="alternarButaca(butaca.id)"
+              />
+            }
+          </div>
+        }
+
+        <span class="w-4 shrink-0 text-center text-xs font-bold text-neutral-300" aria-hidden="true">{{ fila.letra }}</span>
+      </div>
+    }
+  </div>
+
+  @if (limiteAlcanzado()) {
+    <p class="text-center text-sm text-neutral-400" role="status">
+      Alcanzaste el máximo de {{ maximoButacas }} butacas por reserva.
+    </p>
+  }
+
+  <ul class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-neutral-300" aria-label="Referencias">
+    @for (item of leyenda; track item.estado) {
+      <li class="flex items-center gap-1.5">
+        <i class="pi pi-stop" [class]="claseColorEstado[item.estado]" aria-hidden="true"></i>
+        {{ item.texto }}
+      </li>
+    }
+  </ul>
+</div>

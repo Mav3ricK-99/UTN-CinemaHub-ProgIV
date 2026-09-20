@@ -18,3 +18,8 @@ export function generarIdsButacas(): string[] {
     Array.from({ length: COLUMNAS_SALA }, (_, columna) => `${fila}${columna + 1}`),
   );
 }
+
+/** Genera las 560 butacas de una sala. `esEspecial` define cuáles son especiales según su id. */
+export function generarButacas(esEspecial: (idButaca: string) => boolean = () => false): Butaca[] {
+  return generarIdsButacas().map((id) => ({ id, esEspecial: esEspecial(id) }));
+}

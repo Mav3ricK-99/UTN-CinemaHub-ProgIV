@@ -1,0 +1,16 @@
+<p-datepicker
+  dateFormat="dd/mm/yy"
+  iconDisplay="input"
+  appendTo="body"
+  [inputId]="inputId()"
+  [placeholder]="placeholder()"
+  [showIcon]="true"
+  [fluid]="true"
+  [minDate]="minDate()"
+  [maxDate]="maxDate()"
+  [defaultDate]="fechaInicial() ?? null"
+  [disabled]="disabled()"
+  [ngModel]="value()"
+  (ngModelChange)="alCambiarFecha($event)"
+  (onBlur)="touched.set(true)"
+/>

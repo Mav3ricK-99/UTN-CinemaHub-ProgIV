@@ -1,7 +1,9 @@
 import { Component, computed, ElementRef, HostListener, inject, resource, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
+import { Avatar } from 'primeng/avatar';
 
+import { AuthService } from '../../../services/auth.service';
 import { FuncionService } from '../../../services/funcion.service';
 
 const LARGO_MINIMO_BUSQUEDA = 2;
@@ -10,12 +12,19 @@ const UMBRAL_SCROLL_PX = 10;
 
 @Component({
   selector: 'app-navbar',
-  imports: [RouterLink, FormField],
+  imports: [RouterLink, FormField, Avatar],
   templateUrl: './navbar.html',
 })
 export class Navbar {
   private readonly funcionService = inject(FuncionService);
   private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
+  protected readonly usuario = inject(AuthService).usuario;
+
+  /** Imagen aleatoria, estable por usuario: la semilla es su id. */
+  protected readonly avatarUrl = computed(() => {
+    const idUsuario = this.usuario()?.id ?? '';
+    return `https://i.pravatar.cc/80?u=${encodeURIComponent(idUsuario)}`;
+  });
 
   protected readonly busqueda = form(signal({ termino: '' }));
   protected readonly resultadosAbiertos = signal(false);
