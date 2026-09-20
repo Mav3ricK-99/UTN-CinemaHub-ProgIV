@@ -1,0 +1,114 @@
+<section
+  class="relative h-[85vh] min-h-[520px] w-full overflow-hidden bg-neutral-950"
+  aria-roledescription="carrusel"
+  aria-label="Próximas funciones"
+  (mouseenter)="pausar()"
+  (mouseleave)="reanudar()"
+  (focusin)="pausar()"
+  (focusout)="reanudar()"
+>
+  @for (funcion of funciones(); track funcion.id; let indice = $index) {
+    <article
+      class="absolute inset-0 transition-opacity duration-700 ease-in-out"
+      [class.opacity-100]="indice === indiceActual()"
+      [class.opacity-0]="indice !== indiceActual()"
+      [class.pointer-events-none]="indice !== indiceActual()"
+      [attr.aria-hidden]="indice !== indiceActual()"
+      [attr.inert]="indice !== indiceActual() ? '' : null"
+      aria-roledescription="diapositiva"
+    >
+      <img
+        class="absolute inset-0 h-full w-full object-cover"
+        [src]="funcion.pelicula.imagenUrl"
+        [alt]="'Imagen de ' + funcion.pelicula.nombre"
+        [attr.loading]="indice === 0 ? 'eager' : 'lazy'"
+      />
+      <div
+        class="absolute inset-0 bg-gradient-to-r from-neutral-950 via-neutral-950/60 to-transparent"
+      ></div>
+      <div
+        class="absolute inset-0 bg-gradient-to-t from-neutral-950 via-transparent to-neutral-950/30"
+      ></div>
+
+      <div
+        class="relative flex h-full flex-col justify-end gap-8 px-6 pb-24 sm:flex-row sm:items-end sm:justify-between sm:px-12 lg:px-20"
+      >
+        <div class="flex max-w-3xl flex-col gap-5">
+          <p class="text-sm font-semibold uppercase tracking-widest text-red-500">
+            Próxima funcion
+          </p>
+          <h1 class="text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
+            {{ funcion.pelicula.nombre }}
+          </h1>
+          <ul class="flex flex-wrap gap-2 text-sm">
+            <li class="rounded-full bg-red-600 px-3 py-1 font-semibold">
+              {{ funcion.fechaInicio | date: 'EEE d MMM · HH:mm' }}
+            </li>
+            <li class="rounded-full bg-white/15 px-3 py-1 backdrop-blur">
+              {{ funcion.pelicula.idioma }}
+            </li>
+            <li class="rounded-full bg-white/15 px-3 py-1 backdrop-blur">
+              {{ funcion.pelicula.formato }}
+            </li>
+            <li class="rounded-full bg-white/15 px-3 py-1 backdrop-blur">
+              {{ funcion.pelicula.duracionMinutos }} min
+            </li>
+            <li class="rounded-full bg-white/15 px-3 py-1 backdrop-blur">
+              {{ funcion.sala.nombre }}
+            </li>
+            @for (categoria of funcion.pelicula.categorias; track categoria.nombre) {
+              <li class="rounded-full border border-white/30 px-3 py-1">{{ categoria.nombre }}</li>
+            }
+          </ul>
+          <p class="line-clamp-3 max-w-2xl text-base text-neutral-200 sm:text-lg">
+            {{ funcion.pelicula.sinopsis }}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="shrink-0 self-start rounded-full bg-red-600 px-8 py-3 text-base font-bold transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-neutral-400 sm:self-end"
+          [disabled]="estaAgotada(funcion)"
+          [attr.title]="estaAgotada(funcion) ? 'No quedan butacas disponibles' : null"
+        >
+          Reservar ahora
+        </button>
+      </div>
+    </article>
+  }
+
+  @if (funciones().length > 1) {
+    <button
+      type="button"
+      class="absolute left-3 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-2xl backdrop-blur transition hover:bg-black/70 focus-visible:outline-2 focus-visible:outline-white"
+      aria-label="Función anterior"
+      (click)="anterior()"
+    >
+      ‹
+    </button>
+    <button
+      type="button"
+      class="absolute right-3 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-2xl backdrop-blur transition hover:bg-black/70 focus-visible:outline-2 focus-visible:outline-white"
+      aria-label="Función siguiente"
+      (click)="siguiente()"
+    >
+      ›
+    </button>
+
+    <div class="absolute bottom-8 right-6 flex gap-2 sm:right-12 lg:right-20">
+      @for (funcion of funciones(); track funcion.id; let indice = $index) {
+        <button
+          type="button"
+          class="h-1.5 rounded-full transition-all"
+          [class.w-10]="indice === indiceActual()"
+          [class.bg-red-600]="indice === indiceActual()"
+          [class.w-5]="indice !== indiceActual()"
+          [class.bg-white/40]="indice !== indiceActual()"
+          [attr.aria-label]="'Ir a ' + funcion.pelicula.nombre"
+          [attr.aria-current]="indice === indiceActual()"
+          (click)="irA(indice)"
+        ></button>
+      }
+    </div>
+  }
+</section>
