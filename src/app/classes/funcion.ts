@@ -7,6 +7,7 @@ export interface Funcion {
   sala: Sala;
   fechaInicio: Date;
   fechaFin: Date;
+  precio: number;
   butacasReservadas: string[];
 }
 

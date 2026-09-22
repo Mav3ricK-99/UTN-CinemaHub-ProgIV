@@ -63,13 +63,50 @@
             </div>
           }
 
-          <button
-            type="button"
-            class="w-full cursor-pointer rounded-full bg-red-600 px-8 py-3 text-base font-bold transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-neutral-400"
-            [disabled]="butacasSeleccionadas().length === 0"
-          >
-            Reservar butacas
-          </button>
+          @if (articulosSeleccionados().length > 0) {
+            <div class="flex flex-col gap-2">
+              <p class="text-sm font-semibold">Artículos seleccionados:</p>
+              <ul class="flex flex-wrap gap-2 text-xs">
+                @for (articulo of articulosSeleccionados(); track articulo.id) {
+                  <li class="rounded-full bg-red-600 px-3 py-1 font-semibold">{{ articulo.nombre }}</li>
+                }
+              </ul>
+            </div>
+          }
+
+          <form [formRoot]="formulario" novalidate class="flex flex-col gap-3">
+            @if (!usuario()) {
+              <div>
+                <label for="email-contacto" class="mb-1 block text-sm font-semibold">Correo de contacto</label>
+                <input
+                  id="email-contacto"
+                  type="email"
+                  autocomplete="email"
+                  placeholder="tu@email.com"
+                  class="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm placeholder:text-neutral-500 focus:border-white/50 focus:outline-none"
+                  [formField]="formulario.emailContacto"
+                  [attr.aria-invalid]="formulario.emailContacto().touched() && formulario.emailContacto().invalid()"
+                />
+                @if (formulario.emailContacto().touched()) {
+                  @for (error of formulario.emailContacto().errors(); track error.kind) {
+                    <p class="mt-1 text-xs text-red-400">{{ error.message }}</p>
+                  }
+                }
+              </div>
+            }
+
+            @if (errorReserva()) {
+              <p class="rounded-lg bg-red-950/60 px-3 py-2 text-sm text-red-300" role="alert">{{ errorReserva() }}</p>
+            }
+
+            <button
+              type="submit"
+              class="w-full cursor-pointer rounded-full bg-red-600 px-8 py-3 text-base font-bold transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-neutral-400"
+              [disabled]="butacasSeleccionadas().length === 0 || formulario().submitting()"
+            >
+              {{ formulario().submitting() ? 'Reservando...' : 'Reservar butacas' }}
+            </button>
+          </form>
         </aside>
 
         <section class="min-w-0 flex-1" aria-label="Selección de butacas">
@@ -80,6 +117,15 @@
           />
         </section>
       </div>
+
+      @if (articulosCandy.value(); as articulos) {
+        @if (articulos.length > 0) {
+          <section class="mt-10 flex flex-col gap-4" aria-label="Artículos de candy">
+            <h2 class="text-xl font-bold text-white">Llevate un snack</h2>
+            <app-carrousel-articulos [articulos]="articulos" [(articulosSeleccionados)]="articulosSeleccionados" />
+          </section>
+        }
+      }
     } @else {
       <div class="py-24 text-center text-neutral-400">
         <p>La función no existe.</p>

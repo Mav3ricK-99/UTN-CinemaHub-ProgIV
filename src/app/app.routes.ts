@@ -11,6 +11,10 @@ export const routes: Routes = [
       import('./components/seleccion-butaca/seleccion-butaca').then((modulo) => modulo.SeleccionButaca),
   },
   {
+    path: 'checkout/:idOrden',
+    loadComponent: () => import('./components/checkout/checkout').then((modulo) => modulo.Checkout),
+  },
+  {
     path: 'ingreso',
     canActivate: [soloAnonimoGuard],
     loadComponent: () => import('./components/ingreso/ingreso').then((modulo) => modulo.Ingreso),

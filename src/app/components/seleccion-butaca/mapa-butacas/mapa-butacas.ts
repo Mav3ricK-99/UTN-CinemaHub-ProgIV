@@ -25,7 +25,7 @@ interface FilaMapa {
 const CLASE_COLOR_ESTADO: Record<EstadoButaca, string> = {
   disponible: 'text-[#4a5a72]',
   seleccionada: 'text-green-300',
-  ocupada: 'text-[#37453e]',
+  ocupada: 'text-[#305543]',
   especialDisponible: 'text-[#f0d878]',
   especialOcupada: 'text-[#857233]',
 };

@@ -7,6 +7,14 @@ import { generarButacas, generarIdsButacas, Sala } from '../classes/sala';
 const MILISEGUNDOS_POR_MINUTO = 60 * 1000;
 const MILISEGUNDOS_POR_HORA = 60 * MILISEGUNDOS_POR_MINUTO;
 
+/** Precio de entrada según el formato de la función. Datos de prueba hasta definir la tabla en Supabase. */
+const PRECIO_POR_FORMATO: Record<FormatoPelicula, number> = {
+  '2D': 3500,
+  '3D': 4500,
+  '4D': 5500,
+  '5D': 6500,
+};
+
 /** Criterio de prueba: filas J a M, columnas 9 a 20. Reemplazar al definir las butacas especiales. */
 function esButacaEspecialDePrueba(idButaca: string): boolean {
   const fila = idButaca[0];
@@ -130,6 +138,7 @@ export class FuncionService {
         sala: indice % 2 === 0 ? salaUno : salaDos,
         fechaInicio,
         fechaFin,
+        precio: PRECIO_POR_FORMATO[pelicula.formato],
         butacasReservadas: [],
       };
     });
@@ -154,6 +163,7 @@ export class FuncionService {
         sala: indice % 2 === 0 ? salaUno : salaDos,
         fechaInicio,
         fechaFin,
+        precio: PRECIO_POR_FORMATO[pelicula.formato],
         // La segunda función tiene todas las butacas ocupadas para probar el botón deshabilitado.
         butacasReservadas:
           indice === 1 ? generarIdsButacas() : indice === 0 ? butacasOcupadasDePrueba : [],

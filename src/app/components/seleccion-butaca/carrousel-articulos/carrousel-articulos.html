@@ -1,0 +1,19 @@
+<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6" role="list" aria-label="Artículos de candy">
+  @for (articulo of articulosMostrados(); track articulo.id) {
+    <button
+      type="button"
+      role="listitem"
+      class="flex flex-col items-center gap-2 rounded-2xl border-2 p-3 text-center transition"
+      [class.border-red-600]="estaSeleccionado(articulo)"
+      [class.bg-red-950/30]="estaSeleccionado(articulo)"
+      [class.border-transparent]="!estaSeleccionado(articulo)"
+      [class.bg-white/5]="!estaSeleccionado(articulo)"
+      [attr.aria-pressed]="estaSeleccionado(articulo)"
+      (click)="alternarArticulo(articulo)"
+    >
+      <img class="aspect-square w-full rounded-xl object-cover" [src]="imagenPlaceholder" [alt]="articulo.nombre" />
+      <p class="text-sm font-semibold leading-tight text-white">{{ articulo.nombre }}</p>
+      <p class="text-sm text-neutral-400">{{ articulo.precio | currency: 'ARS' : 'symbol' : '1.0-0' }}</p>
+    </button>
+  }
+</div>
