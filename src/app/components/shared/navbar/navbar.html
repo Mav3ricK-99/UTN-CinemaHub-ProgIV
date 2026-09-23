@@ -70,7 +70,16 @@
     <div class="ml-auto flex items-center gap-2 text-sm font-semibold">
       @if (usuario(); as usuarioActual) {
         <span>Bienvenido {{ usuarioActual.nombre }}</span>
-        <p-avatar [image]="avatarUrl()" size="normal" shape="circle" [attr.aria-label]="'Avatar de ' + usuarioActual.nombre" />
+        <button
+          type="button"
+          class="cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-white"
+          aria-haspopup="true"
+          [attr.aria-label]="'Menú de ' + usuarioActual.nombre"
+          (click)="menuUsuario.toggle($event)"
+        >
+          <p-avatar [image]="avatarUrl()" size="normal" shape="circle" />
+        </button>
+        <p-menu #menuUsuario [model]="itemsMenuUsuario" [popup]="true" appendTo="body" />
       } @else {
         <a
           routerLink="/registro"

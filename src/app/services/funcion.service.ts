@@ -30,6 +30,7 @@ const butacasOcupadasDePrueba = ['A1', 'A2', 'B7', 'C15', 'F3', 'H10', 'J12', 'K
 
 const peliculas: Pelicula[] = [
   {
+    id: 'pelicula-1',
     nombre: 'Eclipse Final',
     sinopsis:
       'Una astronauta regresa a una Tierra sumida en la oscuridad y descubre que el último eclipse solar cambió el destino de la humanidad.',
@@ -38,8 +39,11 @@ const peliculas: Pelicula[] = [
     formato: '3D',
     idioma: 'Castellano',
     categorias: [{ nombre: 'Ciencia ficción' }, { nombre: 'Drama' }],
+    promedioResenas: 4.5,
+    cantidadResenas: 128,
   },
   {
+    id: 'pelicula-2',
     nombre: 'La Casa del Lago',
     sinopsis:
       'Una familia se muda a una casa aislada junto a un lago helado. Cada noche, el hielo revela un secreto más oscuro que el anterior.',
@@ -48,8 +52,11 @@ const peliculas: Pelicula[] = [
     formato: '2D',
     idioma: 'Subtitulada',
     categorias: [{ nombre: 'Terror' }, { nombre: 'Suspenso' }],
+    promedioResenas: 3.8,
+    cantidadResenas: 64,
   },
   {
+    id: 'pelicula-3',
     nombre: 'Velocidad Máxima',
     sinopsis:
       'Un piloto retirado acepta una última carrera clandestina que cruza tres países y pone en juego su vida y la de su hermano.',
@@ -58,8 +65,11 @@ const peliculas: Pelicula[] = [
     formato: '4D',
     idioma: 'Castellano',
     categorias: [{ nombre: 'Acción' }],
+    promedioResenas: 0,
+    cantidadResenas: 0,
   },
   {
+    id: 'pelicula-4',
     nombre: 'Mar de Estrellas',
     sinopsis:
       'Dos hermanos animados recorren un océano mágico para devolver una constelación caída al cielo antes del amanecer.',
@@ -68,21 +78,24 @@ const peliculas: Pelicula[] = [
     formato: '5D',
     idioma: 'Castellano',
     categorias: [{ nombre: 'Animación' }, { nombre: 'Aventura' }],
+    promedioResenas: 4.9,
+    cantidadResenas: 210,
   },
 ];
 
 const peliculasPasadas: Pelicula[] = [
-  ['Noche de Neón', 'Acción', '2D', 'Castellano', 112],
-  ['El Último Verano', 'Drama', '2D', 'Subtitulada', 98],
-  ['Cazadores de Tormentas', 'Aventura', '4D', 'Castellano', 121],
-  ['Código Sombra', 'Suspenso', '2D', 'Subtitulada', 109],
-  ['Reino de Cristal', 'Fantasía', '3D', 'Castellano', 134],
-  ['Ciudad Dormida', 'Terror', '2D', 'Subtitulada', 92],
-  ['Pequeños Gigantes', 'Animación', '3D', 'Castellano', 88],
-  ['Horizonte Rojo', 'Ciencia ficción', '5D', 'Castellano', 125],
-  ['La Última Ola', 'Drama', '2D', 'Castellano', 101],
-  ['Furia en la Ruta', 'Acción', '4D', 'Subtitulada', 115],
-].map(([nombre, categoria, formato, idioma, duracionMinutos]) => ({
+  ['Noche de Neón', 'Acción', '2D', 'Castellano', 112, 4.2, 87],
+  ['El Último Verano', 'Drama', '2D', 'Subtitulada', 98, 3.6, 45],
+  ['Cazadores de Tormentas', 'Aventura', '4D', 'Castellano', 121, 4.7, 132],
+  ['Código Sombra', 'Suspenso', '2D', 'Subtitulada', 109, 3.1, 29],
+  ['Reino de Cristal', 'Fantasía', '3D', 'Castellano', 134, 4.4, 96],
+  ['Ciudad Dormida', 'Terror', '2D', 'Subtitulada', 92, 2.9, 18],
+  ['Pequeños Gigantes', 'Animación', '3D', 'Castellano', 88, 4.8, 156],
+  ['Horizonte Rojo', 'Ciencia ficción', '5D', 'Castellano', 125, 0, 0],
+  ['La Última Ola', 'Drama', '2D', 'Castellano', 101, 3.9, 52],
+  ['Furia en la Ruta', 'Acción', '4D', 'Subtitulada', 115, 4.1, 73],
+].map(([nombre, categoria, formato, idioma, duracionMinutos, promedioResenas, cantidadResenas], indice) => ({
+  id: `pelicula-pasada-${indice + 1}`,
   nombre: nombre as string,
   sinopsis: 'Película de prueba ya proyectada en el cine.',
   duracionMinutos: duracionMinutos as number,
@@ -90,6 +103,8 @@ const peliculasPasadas: Pelicula[] = [
   formato: formato as FormatoPelicula,
   idioma: idioma as IdiomaPelicula,
   categorias: [{ nombre: categoria as string }],
+  promedioResenas: promedioResenas as number,
+  cantidadResenas: cantidadResenas as number,
 }));
 
 function normalizarTexto(texto: string): string {

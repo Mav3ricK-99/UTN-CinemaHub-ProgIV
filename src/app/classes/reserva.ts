@@ -1,20 +1,17 @@
+import { Articulo } from './articulo';
 import { Funcion } from './funcion';
-import { Usuario } from './usuario';
+import { Orden } from './orden';
 
 /**
- * Reserva de una o más butacas para una función, hecha por un usuario
- * registrado o anónimo. Si `usuario` es `null`, `emailContacto` es
- * obligatorio para poder entregar el ticket.
+ * Reserva de una o más butacas (y, opcionalmente, artículos de confitería)
+ * para una función. Cada `Orden` tiene como máximo una `Reserva`.
  */
 export interface Reserva {
   id: string;
+  orden: Orden;
   funcion: Funcion;
-  butaca: string[];
-  usuario: Usuario | null;
-  emailContacto: string | null;
-  precio: number;
-  descuentoAplicado: number;
-  qrData: string;
-  verificada: boolean;
-  fechaCompra: Date;
+  butacas: string[];
+  articulos: Articulo[];
+  precioButacas: number;
+  precioArticulos: number;
 }

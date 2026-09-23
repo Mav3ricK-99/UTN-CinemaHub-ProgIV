@@ -1,7 +1,9 @@
 import { Component, computed, ElementRef, HostListener, inject, resource, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { MenuItem } from 'primeng/api';
 import { Avatar } from 'primeng/avatar';
+import { Menu } from 'primeng/menu';
 
 import { AuthService } from '../../../services/auth.service';
 import { FuncionService } from '../../../services/funcion.service';
@@ -12,13 +14,21 @@ const UMBRAL_SCROLL_PX = 10;
 
 @Component({
   selector: 'app-navbar',
-  imports: [RouterLink, FormField, Avatar],
+  imports: [RouterLink, FormField, Avatar, Menu],
   templateUrl: './navbar.html',
 })
 export class Navbar {
   private readonly funcionService = inject(FuncionService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
   private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
-  protected readonly usuario = inject(AuthService).usuario;
+  protected readonly usuario = this.authService.usuario;
+
+  protected readonly itemsMenuUsuario: MenuItem[] = [
+    { label: 'Mis películas', icon: 'pi pi-video', routerLink: '/mis-peliculas' },
+    { separator: true },
+    { label: 'Cerrar sesión', icon: 'pi pi-sign-out', command: () => this.cerrarSesion() },
+  ];
 
   /** Imagen aleatoria, estable por usuario: la semilla es su id. */
   protected readonly avatarUrl = computed(() => {
@@ -69,5 +79,10 @@ export class Navbar {
   protected limpiarBusqueda(): void {
     this.busqueda.termino().value.set('');
     this.resultadosAbiertos.set(false);
+  }
+
+  private async cerrarSesion(): Promise<void> {
+    await this.authService.cerrarSesion();
+    await this.router.navigate(['/']);
   }
 }

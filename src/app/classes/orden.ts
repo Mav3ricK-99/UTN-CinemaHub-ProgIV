@@ -1,20 +1,17 @@
-import { Reserva } from './reserva';
-
-/** Línea del recibo de una orden: una entrada por butaca o, a futuro, un artículo de confitería. */
-export interface ItemOrden {
-  descripcion: string;
-  cantidad: number;
-  precioUnitario: number;
-}
+import { Usuario } from './usuario';
 
 /**
- * Orden de compra generada al reservar butacas. Agrupa la reserva junto a
- * los ítems del recibo y el monto final cobrado.
+ * Orden de compra generada al reservar butacas. El detalle de butacas y
+ * artículos vive en la `Reserva` asociada (relación 1 a 1).
  */
 export interface Orden {
   id: string;
-  reserva: Reserva;
-  items: ItemOrden[];
+  usuario: Usuario | null;
+  emailContacto: string | null;
+  descuentoAplicado: number;
   total: number;
-  fechaCompra: Date;
+  qrData: string;
+  verificada: boolean;
+  fechaVerificacion: Date | null;
+  fechaCreacion: Date;
 }

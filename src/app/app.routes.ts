@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { Landing } from './components/landing/landing';
-import { soloAnonimoGuard } from './guards/acceso.guard';
+import { soloAnonimoGuard, soloRegistradoGuard } from './guards/acceso.guard';
 
 export const routes: Routes = [
   { path: '', component: Landing },
@@ -13,6 +13,12 @@ export const routes: Routes = [
   {
     path: 'checkout/:idOrden',
     loadComponent: () => import('./components/checkout/checkout').then((modulo) => modulo.Checkout),
+  },
+  {
+    path: 'mis-peliculas',
+    canActivate: [soloRegistradoGuard],
+    loadComponent: () =>
+      import('./components/mis-peliculas/mis-peliculas').then((modulo) => modulo.MisPeliculas),
   },
   {
     path: 'ingreso',

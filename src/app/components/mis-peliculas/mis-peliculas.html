@@ -1,0 +1,32 @@
+<main class="min-h-screen bg-neutral-950 px-6 pb-16 pt-28 text-white sm:px-12 lg:px-20">
+  <h1 class="mb-10 text-3xl font-extrabold tracking-tight sm:text-4xl">Mis películas</h1>
+
+  @if (usuario(); as usuarioActual) {
+    @if (misPeliculas.isLoading()) {
+      <div class="flex flex-col gap-5">
+        @for (indice of [1, 2, 3]; track indice) {
+          <div class="h-40 animate-pulse rounded-2xl bg-neutral-900"></div>
+        }
+      </div>
+    } @else if (misPeliculas.error()) {
+      <p class="py-24 text-center text-neutral-400">No se pudieron cargar tus películas.</p>
+    } @else {
+      @let peliculasVistas = misPeliculas.value() ?? [];
+      @if (peliculasVistas.length === 0) {
+        <div class="py-24 text-center text-neutral-400">
+          <p>Todavía no asististe a ninguna función.</p>
+          <a routerLink="/" class="mt-4 inline-block font-semibold text-red-500 hover:text-red-400">Ver cartelera</a>
+        </div>
+      } @else {
+        <div class="flex flex-col gap-5">
+          @for (
+            asistencia of peliculasVistas;
+            track asistencia.pelicula.id + '-' + asistencia.fechaAsistencia.getTime() + '-' + asistencia.butaca
+          ) {
+            <app-tarjeta-pelicula-vista [asistencia]="asistencia" [usuario]="usuarioActual" />
+          }
+        </div>
+      }
+    }
+  }
+</main>

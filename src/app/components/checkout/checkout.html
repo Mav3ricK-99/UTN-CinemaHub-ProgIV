@@ -12,23 +12,23 @@
         >
           <img
             class="aspect-video w-full rounded-2xl object-cover"
-            [src]="datos.orden.reserva.funcion.pelicula.imagenUrl"
-            [alt]="'Imagen de ' + datos.orden.reserva.funcion.pelicula.nombre"
+            [src]="datos.reserva.funcion.pelicula.imagenUrl"
+            [alt]="'Imagen de ' + datos.reserva.funcion.pelicula.nombre"
           />
 
           <div class="flex flex-col gap-2">
-            <h1 class="text-2xl font-extrabold leading-tight">{{ datos.orden.reserva.funcion.pelicula.nombre }}</h1>
-            <p class="text-sm text-neutral-300">{{ datos.orden.reserva.funcion.pelicula.sinopsis }}</p>
+            <h1 class="text-2xl font-extrabold leading-tight">{{ datos.reserva.funcion.pelicula.nombre }}</h1>
+            <p class="text-sm text-neutral-300">{{ datos.reserva.funcion.pelicula.sinopsis }}</p>
           </div>
 
           <div class="flex flex-col gap-1 text-sm text-neutral-400">
             <p>
-              Sala: <span class="font-semibold text-white">{{ datos.orden.reserva.funcion.sala.nombre }}</span>
+              Sala: <span class="font-semibold text-white">{{ datos.reserva.funcion.sala.nombre }}</span>
             </p>
             <p>
               Función:
               <span class="font-semibold text-white">
-                {{ datos.orden.reserva.funcion.fechaInicio | date: "EEEE d 'de' MMMM · HH:mm 'hs'" }}
+                {{ datos.reserva.funcion.fechaInicio | date: "EEEE d 'de' MMMM · HH:mm 'hs'" }}
               </span>
             </p>
           </div>
@@ -36,20 +36,26 @@
           <div class="flex flex-col gap-3 rounded-2xl bg-white/5 p-4">
             <p class="text-sm font-semibold">Recibo</p>
             <ul class="flex flex-col gap-2 text-sm text-neutral-300">
-              @for (item of datos.orden.items; track item.descripcion) {
+              <li class="flex items-center justify-between gap-3">
+                <span>Entradas ({{ datos.reserva.butacas.join(', ') }})</span>
+                <span class="shrink-0 font-medium text-white">
+                  {{ datos.reserva.precioButacas | currency: 'ARS' : 'symbol' : '1.0-0' }}
+                </span>
+              </li>
+              @for (articulo of datos.reserva.articulos; track articulo.id) {
                 <li class="flex items-center justify-between gap-3">
-                  <span>{{ item.descripcion }}</span>
+                  <span>{{ articulo.nombre }}</span>
                   <span class="shrink-0 font-medium text-white">
-                    {{ item.cantidad * item.precioUnitario | currency: 'ARS' : 'symbol' : '1.0-0' }}
+                    {{ articulo.precio | currency: 'ARS' : 'symbol' : '1.0-0' }}
                   </span>
                 </li>
               }
             </ul>
 
-            @if (datos.orden.reserva.descuentoAplicado > 0) {
+            @if (datos.orden.descuentoAplicado > 0) {
               <div class="flex items-center justify-between gap-3 text-sm text-neutral-400">
                 <span>Descuento aplicado</span>
-                <span>-{{ datos.orden.reserva.descuentoAplicado | currency: 'ARS' : 'symbol' : '1.0-0' }}</span>
+                <span>-{{ datos.orden.descuentoAplicado | currency: 'ARS' : 'symbol' : '1.0-0' }}</span>
               </div>
             }
 
@@ -69,7 +75,7 @@
             type="button"
             class="cursor-pointer rounded-full bg-red-600 px-8 py-3 text-base font-bold transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-neutral-400"
             [disabled]="descargandoTicket()"
-            (click)="descargarTicket(datos.orden)"
+            (click)="descargarTicket(datos.orden, datos.reserva)"
           >
             {{ descargandoTicket() ? 'Generando ticket...' : 'Descargar Ticket' }}
           </button>

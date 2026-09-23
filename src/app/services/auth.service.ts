@@ -103,6 +103,11 @@ export class AuthService {
     return 'sesionIniciada';
   }
 
+  /** Cierra la sesión del usuario actual. */
+  async cerrarSesion(): Promise<void> {
+    await this.supabase.cliente.auth.signOut();
+  }
+
   private async cargarUsuario(idUsuario: string | null): Promise<void> {
     if (!idUsuario) {
       this.usuarioActual.set(null);

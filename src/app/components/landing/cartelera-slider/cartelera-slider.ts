@@ -1,14 +1,15 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, effect, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { estaAgotada, Funcion } from '../../../classes/funcion';
+import { EstrellasCalificacion } from '../../shared/estrellas-calificacion/estrellas-calificacion';
 
 const INTERVALO_AUTOAVANCE_MS = 7000;
 
 @Component({
   selector: 'app-cartelera-slider',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, DecimalPipe, RouterLink, EstrellasCalificacion],
   templateUrl: './cartelera-slider.html',
 })
 export class CarteleraSlider {

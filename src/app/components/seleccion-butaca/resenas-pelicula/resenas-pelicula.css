@@ -1,0 +1,18 @@
+@keyframes marquesina-resenas {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquesina {
+  animation-name: marquesina-resenas;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.marquesina.pausado {
+  animation-play-state: paused;
+}

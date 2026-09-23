@@ -1,0 +1,40 @@
+@if (resenas.value(); as listaResenas) {
+  @if (listaResenas.length > 0) {
+    <section
+      class="mb-6 overflow-hidden"
+      aria-label="Reseñas de otros usuarios"
+      (mouseenter)="pausar()"
+      (mouseleave)="reanudar()"
+      (focusin)="pausar()"
+      (focusout)="reanudar()"
+    >
+      <div
+        class="marquesina flex w-max gap-4"
+        [class.pausado]="pausado()"
+        [style.animationDuration.s]="duracionSegundos()"
+      >
+        @for (resena of resenasParaMarquesina(); track indice; let indice = $index) {
+          <article
+            class="flex w-72 shrink-0 flex-col gap-2 rounded-xl bg-white/5 p-4"
+            [attr.aria-hidden]="esDuplicado(indice) ? 'true' : null"
+          >
+            <div class="flex items-center gap-3">
+              <img
+                class="size-9 shrink-0 rounded-full object-cover"
+                [src]="avatarUrl(resena.usuario.id)"
+                [alt]="'Avatar de ' + resena.usuario.nombre"
+                loading="lazy"
+              />
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold">{{ resena.usuario.nombre }}</p>
+                <p class="text-xs text-neutral-400">{{ resena.fechaCreacion | date: 'd MMM y' }}</p>
+              </div>
+            </div>
+            <app-estrellas-calificacion [puntaje]="resena.puntaje" />
+            <p class="line-clamp-3 text-sm text-neutral-300">{{ resena.comentario }}</p>
+          </article>
+        }
+      </div>
+    </section>
+  }
+}

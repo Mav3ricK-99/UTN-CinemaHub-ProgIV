@@ -18,6 +18,16 @@ function crearGuardPorRol(rolesPermitidos: RolUsuario[]): CanActivateFn {
   };
 }
 
+/** Permite el acceso solo a usuarios con sesión iniciada, sin importar el rol. */
+export const soloRegistradoGuard: CanActivateFn = async () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  await authService.inicializado;
+
+  return authService.usuario() ? true : router.createUrlTree([RUTA_INICIO]);
+};
+
 /** Permite el acceso solo a usuarios sin sesión iniciada (registro, login). */
 export const soloAnonimoGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);

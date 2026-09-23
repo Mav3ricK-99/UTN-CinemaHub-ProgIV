@@ -4,11 +4,13 @@ import { RouterLink } from '@angular/router';
 import * as QRCode from 'qrcode';
 
 import { Orden } from '../../classes/orden';
+import { Reserva } from '../../classes/reserva';
 import { OrdenService } from '../../services/orden.service';
 import { TicketPdfService } from '../../services/ticket-pdf.service';
 
 interface DatosCheckout {
   orden: Orden;
+  reserva: Reserva;
   qrDataUrl: string;
 }
 
@@ -27,20 +29,21 @@ export class Checkout {
   protected readonly datosCheckout = resource<DatosCheckout | null, string>({
     params: () => this.idOrden(),
     loader: async ({ params: idOrden }) => {
-      const orden = await this.ordenService.obtenerOrdenPorId(idOrden);
-      if (!orden) return null;
+      const ordenConReserva = await this.ordenService.obtenerOrdenPorId(idOrden);
+      if (!ordenConReserva) return null;
 
-      const qrDataUrl = await QRCode.toDataURL(orden.reserva.qrData, { margin: 1, width: 320 });
-      return { orden, qrDataUrl };
+      const { orden, reserva } = ordenConReserva;
+      const qrDataUrl = await QRCode.toDataURL(orden.qrData, { margin: 1, width: 320 });
+      return { orden, reserva, qrDataUrl };
     },
   });
 
   protected readonly descargandoTicket = signal(false);
 
-  protected async descargarTicket(orden: Orden): Promise<void> {
+  protected async descargarTicket(orden: Orden, reserva: Reserva): Promise<void> {
     this.descargandoTicket.set(true);
     try {
-      await this.ticketPdfService.descargarTicket(orden);
+      await this.ticketPdfService.descargarTicket(orden, reserva);
     } finally {
       this.descargandoTicket.set(false);
     }

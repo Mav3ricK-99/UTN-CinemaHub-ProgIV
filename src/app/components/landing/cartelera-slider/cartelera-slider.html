@@ -40,6 +40,14 @@
           <h1 class="text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
             {{ funcion.pelicula.nombre }}
           </h1>
+          @if (funcion.pelicula.cantidadResenas > 0) {
+            <div class="flex items-center gap-2" aria-label="Calificación promedio">
+              <app-estrellas-calificacion [puntaje]="funcion.pelicula.promedioResenas" />
+              <span class="text-sm text-neutral-300">
+                {{ funcion.pelicula.promedioResenas | number: '1.1-1' }} ({{ funcion.pelicula.cantidadResenas }} reseñas)
+              </span>
+            </div>
+          }
           <ul class="flex flex-wrap gap-2 text-sm">
             <li class="rounded-full bg-red-600 px-3 py-1 font-semibold">
               {{ funcion.fechaInicio | date: 'EEE d MMM · HH:mm' }}

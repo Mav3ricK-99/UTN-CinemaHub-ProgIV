@@ -3,6 +3,7 @@ import { jsPDF } from 'jspdf';
 import * as QRCode from 'qrcode';
 
 import { Orden } from '../classes/orden';
+import { Reserva } from '../classes/reserva';
 
 const ANCHO_HOJA_MM = 210;
 const MARGEN_MM = 20;
@@ -30,11 +31,10 @@ function formatearPrecio(monto: number): string {
 @Injectable({ providedIn: 'root' })
 export class TicketPdfService {
   /** Arma el PDF del ticket de una orden y dispara su descarga en el navegador. */
-  async descargarTicket(orden: Orden): Promise<void> {
-    const { reserva, items, total } = orden;
-    const { funcion } = reserva;
+  async descargarTicket(orden: Orden, reserva: Reserva): Promise<void> {
+    const { funcion, butacas, articulos, precioButacas } = reserva;
 
-    const qrDataUrl = await QRCode.toDataURL(reserva.qrData, { margin: 1, width: 400 });
+    const qrDataUrl = await QRCode.toDataURL(orden.qrData, { margin: 1, width: 400 });
 
     const documento = new jsPDF({ unit: 'mm', format: 'a4' });
     const anchoUtil = ANCHO_HOJA_MM - MARGEN_MM * 2;
@@ -66,7 +66,7 @@ export class TicketPdfService {
       `Formato ${funcion.pelicula.formato} · ${funcion.pelicula.idioma}`,
       `Sala: ${funcion.sala.nombre}`,
       `Función: ${formatearFechaFuncion(funcion.fechaInicio)}`,
-      `Butacas: ${reserva.butaca.join(', ')}`,
+      `Butacas: ${butacas.join(', ')}`,
     ];
     for (const linea of datosFuncion) {
       documento.text(linea, MARGEN_MM, y);
@@ -94,19 +94,22 @@ export class TicketPdfService {
     documento.setFont('helvetica', 'normal');
     documento.setFontSize(10);
     documento.setTextColor(...COLOR_TEXTO);
-    for (const item of items) {
-      documento.text(item.descripcion, MARGEN_MM, y);
-      documento.text(String(item.cantidad), xCantidad, y, { align: 'right' });
-      documento.text(formatearPrecio(item.cantidad * item.precioUnitario), ANCHO_HOJA_MM - MARGEN_MM, y, {
-        align: 'right',
-      });
+    documento.text(`Entradas (${butacas.join(', ')})`, MARGEN_MM, y);
+    documento.text(String(butacas.length), xCantidad, y, { align: 'right' });
+    documento.text(formatearPrecio(precioButacas), ANCHO_HOJA_MM - MARGEN_MM, y, { align: 'right' });
+    y += 6;
+
+    for (const articulo of articulos) {
+      documento.text(articulo.nombre, MARGEN_MM, y);
+      documento.text('1', xCantidad, y, { align: 'right' });
+      documento.text(formatearPrecio(articulo.precio), ANCHO_HOJA_MM - MARGEN_MM, y, { align: 'right' });
       y += 6;
     }
 
-    if (reserva.descuentoAplicado > 0) {
+    if (orden.descuentoAplicado > 0) {
       documento.setTextColor(...COLOR_TEXTO_SECUNDARIO);
       documento.text('Descuento aplicado', MARGEN_MM, y);
-      documento.text(`-${formatearPrecio(reserva.descuentoAplicado)}`, ANCHO_HOJA_MM - MARGEN_MM, y, {
+      documento.text(`-${formatearPrecio(orden.descuentoAplicado)}`, ANCHO_HOJA_MM - MARGEN_MM, y, {
         align: 'right',
       });
       y += 6;
@@ -121,7 +124,7 @@ export class TicketPdfService {
     documento.setFontSize(13);
     documento.setTextColor(...COLOR_TEXTO);
     documento.text('Total', MARGEN_MM, y);
-    documento.text(formatearPrecio(total), ANCHO_HOJA_MM - MARGEN_MM, y, { align: 'right' });
+    documento.text(formatearPrecio(orden.total), ANCHO_HOJA_MM - MARGEN_MM, y, { align: 'right' });
     y += 14;
 
     const xQr = MARGEN_MM + (anchoUtil - TAMANO_QR_MM) / 2;

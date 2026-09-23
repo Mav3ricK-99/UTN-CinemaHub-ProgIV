@@ -1,0 +1,10 @@
+<div class="flex gap-0.5 text-amber-400" [attr.aria-label]="'Calificación: ' + puntaje() + ' de 5'">
+  @for (indiceEstrella of estrellas; track indiceEstrella) {
+    <i
+      class="pi"
+      [class.pi-star-fill]="estadoEstrella(puntaje(), indiceEstrella) === 'llena'"
+      [class.pi-star-half-fill]="estadoEstrella(puntaje(), indiceEstrella) === 'media'"
+      [class.pi-star]="estadoEstrella(puntaje(), indiceEstrella) === 'vacia'"
+    ></i>
+  }
+</div>

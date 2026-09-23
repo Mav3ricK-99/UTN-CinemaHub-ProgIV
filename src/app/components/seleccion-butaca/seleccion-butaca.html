@@ -10,6 +10,8 @@
           class="flex w-full shrink-0 flex-col gap-5 lg:sticky lg:top-28 lg:w-96 lg:self-start"
           aria-label="Detalle de la función"
         >
+          <app-resenas-pelicula [pelicula]="funcionActual.pelicula" />
+
           <img
             class="aspect-video w-full rounded-2xl object-cover"
             [src]="funcionActual.pelicula.imagenUrl"
@@ -18,6 +20,17 @@
 
           <div class="flex flex-col gap-3">
             <h1 class="text-3xl font-extrabold leading-tight">{{ funcionActual.pelicula.nombre }}</h1>
+            @if (funcionActual.pelicula.cantidadResenas > 0) {
+              <div class="flex items-center gap-2" aria-label="Calificación promedio">
+                <app-estrellas-calificacion [puntaje]="funcionActual.pelicula.promedioResenas" />
+                <span class="text-sm text-neutral-300">
+                  {{ funcionActual.pelicula.promedioResenas | number: '1.1-1' }} ({{
+                    funcionActual.pelicula.cantidadResenas
+                  }}
+                  reseñas)
+                </span>
+              </div>
+            }
             <p class="text-sm text-neutral-300">{{ funcionActual.pelicula.sinopsis }}</p>
             <p class="text-sm text-neutral-400">
               Idioma: <span class="font-semibold text-white">{{ funcionActual.pelicula.idioma }}</span>

@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { Component, computed, DestroyRef, inject, input, resource, signal } from '@angular/core';
 import { email, form, FormField, FormRoot, validate } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
@@ -7,8 +8,10 @@ import { ArticuloService } from '../../services/articulo.service';
 import { AuthService } from '../../services/auth.service';
 import { FuncionService } from '../../services/funcion.service';
 import { OrdenService } from '../../services/orden.service';
+import { EstrellasCalificacion } from '../shared/estrellas-calificacion/estrellas-calificacion';
 import { CarrouselArticulos } from './carrousel-articulos/carrousel-articulos';
 import { MapaButacas } from './mapa-butacas/mapa-butacas';
+import { ResenasPelicula } from './resenas-pelicula/resenas-pelicula';
 import { requeridoSiAnonimo } from './validadores-seleccion-butaca';
 
 const MILISEGUNDOS_POR_MINUTO = 60 * 1000;
@@ -22,7 +25,16 @@ function pluralizar(cantidad: number, singular: string, plural: string): string 
 
 @Component({
   selector: 'app-seleccion-butaca',
-  imports: [RouterLink, MapaButacas, FormField, FormRoot, CarrouselArticulos],
+  imports: [
+    RouterLink,
+    MapaButacas,
+    FormField,
+    FormRoot,
+    CarrouselArticulos,
+    EstrellasCalificacion,
+    DecimalPipe,
+    ResenasPelicula,
+  ],
   templateUrl: './seleccion-butaca.html',
 })
 export class SeleccionButaca {
@@ -88,7 +100,7 @@ export class SeleccionButaca {
           if (!funcionActual || this.butacasSeleccionadas().length === 0) return undefined;
 
           try {
-            const orden = await this.ordenService.crearOrden({
+            const { orden } = await this.ordenService.crearOrden({
               funcion: funcionActual,
               butacas: this.butacasSeleccionadas(),
               articulos: this.articulosSeleccionados(),
