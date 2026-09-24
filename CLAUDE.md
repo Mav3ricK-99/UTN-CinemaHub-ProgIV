@@ -21,8 +21,7 @@ Incluye:
   landing).
 - **Backoffice**: panel de administración para ajustar configuraciones del
   sistema (ver "Reglas de negocio").
-- **Pasarela de pagos**: integración simple, no se requiere procesamiento
-  complejo (TBD: proveedor específico o mock).
+- **Checkout**: Al reservar la butaca se redireccionara al checkout donde mostrara el monto total facturado y el QR posibilitando descargar la factura.
 
 ### Entidades
 
@@ -35,7 +34,9 @@ Incluye:
 | imagenUrl | string | |
 | formato | enum | `2D` \| `3D` \| `4D` \| `5D` |
 | idioma | enum | `Castellano` \| `Subtitulada` |
-| categorias | Categoria[] | relación muchos a muchos |
+| categorias | Categoria[] | relación muchos a muchos 
+| promedioResenas | number | cache — sincronizado por trigger a partir de `Resena` |
+| cantidadResenas | number | cache — cantidad total de reseñas, útil para mostrar "(124 reseñas)" en la UI |
 
 #### Categoria
 | Campo | Tipo | Notas |
@@ -61,6 +62,7 @@ Incluye:
 | sala | Sala | |
 | fechaInicio | datetime | |
 | fechaFin | datetime | |
+| precio | number | Precio de la funcion |
 | butacasReservadas | string[] | identificadores de butacas (ej: `A28`) ya reservadas para esta función |
 
 **Regla de negocio crítica**: no puede crearse una función que comience antes
@@ -88,19 +90,50 @@ de carrera.
 Datos de registro acotados a los tres campos de arriba (+ auth de Supabase
 para la contraseña/sesión).
 
-#### Reserva
-
+#### Orden
 | Campo | Tipo | Notas |
 |---|---|---|
-| funcion | Funcion | |
-| butaca | string | identificador de butaca (ej: `A28`) |
 | usuario | Usuario \| null | `null` si la compra es anónima |
-| emailContacto | string | requerido si `usuario` es `null`, para poder entregar el ticket |
-| precio | number | precio final ya aplicado el descuento si corresponde |
+| emailContacto | string | requerido si `usuario` es `null` |
 | descuentoAplicado | number | 0 si no aplica |
-| qrData | string | contenido/identificador único codificado en el QR |
-| verificada | boolean | default `false`. `true` cuando un empleado escanea el QR en el ingreso |
-| fechaCompra | datetime | |
+| total | number | suma de la reserva (butacas) + artículos |
+| qrData | string | único QR para toda la orden (entrada + candy) |
+| verificada | boolean | |
+| fechaVerificacion | datetime \| null | |
+| fechaCreacion | datetime | |
+
+#### Reserva
+| Campo | Tipo | Notas |
+|---|---|---|
+| orden | Orden | relación 1 a 1 — cada Orden tiene como máximo una Reserva |
+| funcion | Funcion | |
+| butacas | Butaca[] | identificadores de butacas incluidas (ej: `['A28', 'A29']`) |
+| articulos | Articulo[] | |
+| precioButacas | number | precio total de las butacas de esta reserva (sin contar artículos) |
+| precioArticulos | number | precio total de las butacas de esta reserva (sin contar butacas) |
+
+#### CategoriaArticulo
+| Campo | Tipo | Notas |
+|---|---|---|
+| nombre | string | ej: "Bebidas", "Snacks", "Combos" |
+
+#### Articulo
+| Campo | Tipo | Notas |
+|---|---|---|
+| nombre | string | |
+| precio | number | |
+| categoria | CategoriaArticulo | relación muchos a uno *(distinta de la Categoria de Pelicula)* |
+| disponible | boolean | TBD si en algún momento se suma stock/inventario real |
+
+#### Resena
+| Campo | Tipo | Notas |
+|---|---|---|
+| pelicula | Pelicula | |
+| usuario | Usuario | requerido — no hay reseña anónima |
+| puntaje | number | entero, 1 a 5 |
+| comentario | string | límite sugerido: 280 caracteres |
+| fechaCreacion | datetime | |
+| fechaEdicion | datetime \| null | se actualiza si el usuario edita su reseña |
 
 ### Reglas de negocio
 
@@ -114,7 +147,10 @@ para la contraseña/sesión).
    (gap mínimo de 30 minutos entre funciones de una misma sala).
 4. **Butaca única por función**: una butaca no puede reservarse dos veces
    para la misma función (constraint de unicidad `funcion + butaca`).
-1. **Descuento para Mayores**: Los usuarios registrados mayores de 50 años obtienen un descuento. El porcentaje/monto es **configurable por un administrador** desde el backoffice (no hardcodeado).
+5. **Descuento para Mayores**: Los usuarios registrados mayores de 50 años obtienen un descuento. El porcentaje/monto es **configurable por un administrador** desde el backoffice (no hardcodeado).
+6. **Reseña solo con compra previa**: un usuario únicamente puede dejar
+   reseña de una película si tiene registrada al menos una Orden con una
+   Reserva asociada a una Función de esa película.
 
 ### Pendientes de definición (TBD)
 - Estructura interna de `Sala` (filas, columnas, numeración de butacas).
