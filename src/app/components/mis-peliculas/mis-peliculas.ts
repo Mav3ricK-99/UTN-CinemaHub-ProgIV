@@ -2,7 +2,6 @@ import { Component, inject, resource } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
-import { ResenaService } from '../../services/resena.service';
 import { TarjetaPeliculaVista } from './tarjeta-pelicula-vista/tarjeta-pelicula-vista';
 
 @Component({
@@ -11,11 +10,11 @@ import { TarjetaPeliculaVista } from './tarjeta-pelicula-vista/tarjeta-pelicula-
   templateUrl: './mis-peliculas.html',
 })
 export class MisPeliculas {
-  private readonly resenaService = inject(ResenaService);
-  protected readonly usuario = inject(AuthService).usuario;
+  private readonly authService = inject(AuthService);
+  protected readonly usuario = this.authService.usuario;
 
   protected readonly misPeliculas = resource({
     params: () => this.usuario(),
-    loader: ({ params: usuario }) => (usuario ? this.resenaService.obtenerMisPeliculas(usuario) : Promise.resolve([])),
+    loader: ({ params: usuario }) => (usuario ? this.authService.obtenerPeliculasVistas(usuario) : Promise.resolve([])),
   });
 }

@@ -28,6 +28,7 @@ Incluye:
 #### Pelicula
 | Campo | Tipo | Notas |
 |---|---|---|
+| id | string | |
 | nombre | string | |
 | sinopsis | string | |
 | duracionMinutos | number | |
@@ -46,18 +47,22 @@ Incluye:
 #### Sala
 | Campo | Tipo | Notas |
 |---|---|---|
+| id | string | |
 | nombre | string | |
-| butacas | Butaca[] | siempre 560 butacas, grid fijo de 20 filas x 28 columnas |
+| butacas | Butaca[] | 518 butacas: grid de 18 filas (A-I, L-T) x 28 columnas,
+más 14 butacas accesibles en la fila J. La fila K se elimina — su espacio
+físico se fusiona con J para dar lugar a butacas accesibles más anchas. |
 
-#### Butaca
+#### Butaca (actualizado)
 | Campo | Tipo | Notas |
 |---|---|---|
-| id | string | identificador único: `Letra fila` + `número columna` (ej: `A28`). Filas `A`–`T` (20), columnas `1`–`28` |
-| esEspecial | boolean | |
+| id | string | `Letra fila` + `número columna` (ej: `A28`, `J10`) |
+| esEspecial | boolean | `true` solo para las 14 butacas de la fila `J` |
 
 #### Funcion
 | Campo | Tipo | Notas |
 |---|---|---|
+| id | string | |
 | pelicula | Pelicula | |
 | sala | Sala | |
 | fechaInicio | datetime | |
@@ -93,6 +98,7 @@ para la contraseña/sesión).
 #### Orden
 | Campo | Tipo | Notas |
 |---|---|---|
+| id | string | |
 | usuario | Usuario \| null | `null` si la compra es anónima |
 | emailContacto | string | requerido si `usuario` es `null` |
 | descuentoAplicado | number | 0 si no aplica |
@@ -105,6 +111,7 @@ para la contraseña/sesión).
 #### Reserva
 | Campo | Tipo | Notas |
 |---|---|---|
+| id | string | |
 | orden | Orden | relación 1 a 1 — cada Orden tiene como máximo una Reserva |
 | funcion | Funcion | |
 | butacas | Butaca[] | identificadores de butacas incluidas (ej: `['A28', 'A29']`) |
@@ -120,6 +127,7 @@ para la contraseña/sesión).
 #### Articulo
 | Campo | Tipo | Notas |
 |---|---|---|
+| id | string | |
 | nombre | string | |
 | precio | number | |
 | categoria | CategoriaArticulo | relación muchos a uno *(distinta de la Categoria de Pelicula)* |
@@ -128,6 +136,7 @@ para la contraseña/sesión).
 #### Resena
 | Campo | Tipo | Notas |
 |---|---|---|
+| id | string | |
 | pelicula | Pelicula | |
 | usuario | Usuario | requerido — no hay reseña anónima |
 | puntaje | number | entero, 1 a 5 |
@@ -151,6 +160,7 @@ para la contraseña/sesión).
 6. **Reseña solo con compra previa**: un usuario únicamente puede dejar
    reseña de una película si tiene registrada al menos una Orden con una
    Reserva asociada a una Función de esa película.
+7. **El cine contará con 8 salas**: El cine dispondrá solamente de 8 salas fisicas.
 
 ### Pendientes de definición (TBD)
 - Estructura interna de `Sala` (filas, columnas, numeración de butacas).
@@ -165,7 +175,8 @@ para la contraseña/sesión).
 - **Supabase** como backend, limitado a:
   - Auth (autenticación de usuarios)
   - Base de datos (Postgres vía cliente JS de Supabase)
-  - No usar Storage, Edge Functions ni Realtime salvo que se indique explícitamente.
+  - **Storage** (imágenes de películas, y potencialmente de artículos de
+    candy si en algún momento se agregan)
 - **PWA**: manifest.json + service worker (usar `@angular/service-worker` / `ng add @angular/pwa`).
 - **Tailwind CSS** como única librería de estilos:
   - Usar clases utilitarias inline en los templates.
@@ -173,6 +184,14 @@ para la contraseña/sesión).
   - Es indistinto si los archivos de estilos de componente están en `.css` o `.scss`; no es un criterio relevante para este proyecto.
 - **Prime NG** como única librería de componentes UI:
   - Usar en caso de que el prompt lo requiera.
+
+### Convenciones de Storage
+- Bucket `peliculas-imagenes`: público para lectura (se muestran en la
+  landing sin necesidad de sesión), escritura restringida a rol `admin`.
+- Nomenclatura de archivos: `{pelicula_id}.{extensión}` — evita colisiones
+  de nombre y facilita saber a qué película pertenece cada imagen.
+- El campo `imagenUrl` de `Pelicula` guarda la URL pública del archivo en
+  el bucket, no la ruta interna.
 
 ### Arquitectura de componentes
 - Todos los componentes deben ser **standalone**.
@@ -226,6 +245,3 @@ Al responder en el chat, usar español técnico controlado, siguiendo estas norm
   con un formulario y una tabla), estos van anidados dentro de la carpeta
   de esa feature, no sueltos en la raíz de `components/`.
 - Nomenclatura de carpetas: kebab-case, igual que el resto del proyecto.
-
-## Convención de modelos con esquemas de base de datos
-- Dentro de la carpeta `supabase/migrations` estan todos los .sql de las tablas ya ejecutados en Supabase

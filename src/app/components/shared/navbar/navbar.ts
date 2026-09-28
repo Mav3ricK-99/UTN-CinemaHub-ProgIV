@@ -6,7 +6,7 @@ import { Avatar } from 'primeng/avatar';
 import { Menu } from 'primeng/menu';
 
 import { AuthService } from '../../../services/auth.service';
-import { FuncionService } from '../../../services/funcion.service';
+import { PeliculaService } from '../../../services/pelicula.service';
 
 const LARGO_MINIMO_BUSQUEDA = 2;
 const ESPERA_BUSQUEDA_MS = 250;
@@ -18,17 +18,28 @@ const UMBRAL_SCROLL_PX = 10;
   templateUrl: './navbar.html',
 })
 export class Navbar {
-  private readonly funcionService = inject(FuncionService);
+  private readonly peliculaService = inject(PeliculaService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly usuario = this.authService.usuario;
 
-  protected readonly itemsMenuUsuario: MenuItem[] = [
-    { label: 'Mis películas', icon: 'pi pi-video', routerLink: '/mis-peliculas' },
-    { separator: true },
-    { label: 'Cerrar sesión', icon: 'pi pi-sign-out', command: () => this.cerrarSesion() },
-  ];
+  protected readonly itemsMenuUsuario = computed<MenuItem[]>(() => {
+    const items: MenuItem[] = [{ label: 'Mis películas', icon: 'pi pi-video', routerLink: '/mis-peliculas' }];
+
+    const rol = this.usuario()?.rol;
+
+    if (rol === 'empleado' || rol === 'admin') {
+      items.push({ label: 'Validar entrada', icon: 'pi pi-qrcode', routerLink: '/validar-entrada' });
+    }
+
+    if (rol === 'admin') {
+      items.push({ label: 'Backoffice', icon: 'pi pi-shield', routerLink: '/backoffice' });
+    }
+
+    items.push({ separator: true }, { label: 'Cerrar sesión', icon: 'pi pi-sign-out', command: () => this.cerrarSesion() });
+    return items;
+  });
 
   /** Imagen aleatoria, estable por usuario: la semilla es su id. */
   protected readonly avatarUrl = computed(() => {
@@ -48,7 +59,7 @@ export class Navbar {
     loader: async ({ params: termino, abortSignal }) => {
       await new Promise((resolver) => setTimeout(resolver, ESPERA_BUSQUEDA_MS));
       if (abortSignal.aborted) return [];
-      return this.funcionService.buscarPeliculasPorNombre(termino);
+      return this.peliculaService.obtenerPeliculas(termino);
     },
   });
 

@@ -19,10 +19,7 @@
         </div>
       } @else {
         <div class="flex flex-col gap-5">
-          @for (
-            asistencia of peliculasVistas;
-            track asistencia.pelicula.id + '-' + asistencia.fechaAsistencia.getTime() + '-' + asistencia.butaca
-          ) {
+          @for (asistencia of peliculasVistas; track asistencia.pelicula.id) {
             <app-tarjeta-pelicula-vista [asistencia]="asistencia" [usuario]="usuarioActual" />
           }
         </div>

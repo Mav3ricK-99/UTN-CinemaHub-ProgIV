@@ -49,11 +49,11 @@ export class SeleccionButaca {
 
   protected readonly funcion = resource({
     params: () => this.idFuncion(),
-    loader: ({ params: idFuncion }) => this.funcionService.obtenerFuncionPorId(idFuncion),
+    loader: ({ params: idFuncion }) => this.funcionService.obtenerDetalleFuncion(idFuncion),
   });
 
   protected readonly articulosCandy = resource({
-    loader: () => this.articuloService.obtenerArticulosCandy(),
+    loader: () => this.articuloService.obtenerArticulosDisponibles(),
   });
 
   protected readonly butacasSeleccionadas = signal<string[]>([]);

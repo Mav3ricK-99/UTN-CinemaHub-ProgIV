@@ -1,0 +1,18 @@
+@if (estado().pelicula; as pelicula) {
+  <div
+    class="relative flex aspect-[3/4] min-w-0 flex-col items-center justify-center overflow-hidden rounded-xl bg-cover bg-center text-center text-white"
+    [style.background-image]="'url(' + pelicula.imagenUrl + ')'"
+  >
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="relative z-10 flex flex-col items-center gap-1 px-2">
+      <p class="text-sm font-bold">{{ estado().sala.nombre }}</p>
+      <p class="text-xs text-slate-200">{{ minutosRestantes() }} min restantes</p>
+    </div>
+  </div>
+} @else {
+  <div class="flex aspect-[3/4] min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-100 px-2 text-center">
+    <p class="text-sm font-bold text-slate-700">{{ estado().sala.nombre }}</p>
+    <i class="pi pi-refresh animate-spin text-slate-400"></i>
+    <p class="text-xs text-slate-500">Preparando sala</p>
+  </div>
+}

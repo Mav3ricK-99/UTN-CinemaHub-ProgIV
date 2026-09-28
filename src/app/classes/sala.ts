@@ -4,22 +4,11 @@ export interface Butaca {
 }
 
 export interface Sala {
+  id: string;
   nombre: string;
+  /** Vacío en las consultas de listado. Se carga solo en el detalle de una función. */
   butacas: Butaca[];
 }
 
-const FILAS_SALA = 'ABCDEFGHIJKLMNOPQRST';
-const COLUMNAS_SALA = 28;
-
-export const TOTAL_BUTACAS_SALA = FILAS_SALA.length * COLUMNAS_SALA;
-
-export function generarIdsButacas(): string[] {
-  return [...FILAS_SALA].flatMap((fila) =>
-    Array.from({ length: COLUMNAS_SALA }, (_, columna) => `${fila}${columna + 1}`),
-  );
-}
-
-/** Genera las 560 butacas de una sala. `esEspecial` define cuáles son especiales según su id. */
-export function generarButacas(esEspecial: (idButaca: string) => boolean = () => false): Butaca[] {
-  return generarIdsButacas().map((id) => ({ id, esEspecial: esEspecial(id) }));
-}
+/** 18 filas (A-I, L-T) x 28 columnas, más 14 butacas accesibles en la fila J. */
+export const TOTAL_BUTACAS_SALA = 18 * 28 + 14;

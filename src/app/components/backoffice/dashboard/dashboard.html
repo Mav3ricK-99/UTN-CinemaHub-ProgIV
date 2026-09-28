@@ -1,0 +1,54 @@
+<div class="flex flex-col gap-8">
+  <section class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <app-tarjeta-metrica
+      titulo="Funciones realizadas"
+      icono="pi pi-calendar-clock"
+      [valor]="funcionesRealizadas.value() ?? 0"
+    />
+    <app-tarjeta-metrica
+      titulo="Comentarios realizados"
+      icono="pi pi-comments"
+      [valor]="comentariosRealizados.value() ?? 0"
+    />
+    <app-tarjeta-metrica
+      titulo="Entradas vendidas"
+      icono="pi pi-ticket"
+      [valor]="entradasVendidas.value() ?? 0"
+    />
+  </section>
+
+  <section>
+    <h2 class="mb-3 text-lg font-bold text-slate-800">Proyectándose ahora</h2>
+    <div class="grid grid-cols-8 gap-3">
+      @for (estado of estadoSalas.value() ?? []; track estado.sala.nombre) {
+        <app-tarjeta-sala [estado]="estado" />
+      }
+    </div>
+  </section>
+
+  <section>
+    <h2 class="mb-3 text-lg font-bold text-slate-800">Próximas funciones</h2>
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-50 text-xs font-semibold uppercase text-slate-500">
+          <tr>
+            <th class="px-4 py-3">Película</th>
+            <th class="px-4 py-3">Sala</th>
+            <th class="px-4 py-3">Inicio</th>
+            <th class="px-4 py-3">Butacas reservadas</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (funcion of proximasFunciones.value() ?? []; track funcion.id) {
+            <tr>
+              <td class="px-4 py-3 font-medium text-slate-800">{{ funcion.pelicula.nombre }}</td>
+              <td class="px-4 py-3 text-slate-600">{{ funcion.sala.nombre }}</td>
+              <td class="px-4 py-3 text-slate-600">{{ funcion.fechaInicio | date: 'EEE d MMM · HH:mm' }}</td>
+              <td class="px-4 py-3 text-slate-600">{{ funcion.butacasReservadas.length }} / {{ totalButacasSala }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

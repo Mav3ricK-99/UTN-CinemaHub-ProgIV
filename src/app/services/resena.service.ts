@@ -1,120 +1,109 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 
 import { Pelicula } from '../classes/pelicula';
 import { Resena } from '../classes/resena';
 import { Usuario } from '../classes/usuario';
-import { FuncionService } from './funcion.service';
+import { convertirFilaEnPelicula, FilaPelicula, SELECT_PELICULA } from './pelicula.service';
+import { SupabaseService } from './supabase.service';
+import { convertirFilaEnUsuario, FilaUsuario } from './usuario.service';
 
-export interface AsistenciaPelicula {
-  pelicula: Pelicula;
-  butaca: string; //Este deberia ser un Array de Butaca []
-  fechaAsistencia: Date;
-  resena: Resena | null;
-}
-
-export interface SolicitudGuardarResena {
+export interface SolicitudCrearResena {
   pelicula: Pelicula;
   usuario: Usuario;
   puntaje: number;
   comentario: string;
 }
 
-/** Butacas de prueba asignadas a cada asistencia, hasta definir la tabla `reserva` en Supabase. */
-const BUTACAS_DE_PRUEBA = ['F12', 'H7', 'C20', 'J15', 'B3', 'M9', 'D18', 'K5', 'A22', 'N11'];
-
-const MILISEGUNDOS_POR_DIA = 24 * 60 * 60 * 1000;
-
-/** Usuarios de prueba, dueños de las reseñas sembradas para cada película. */
-function crearUsuarioDePrueba(id: string, nombre: string): Usuario {
-  return { id, email: `${id}@demo.com`, nombre, fechaNacimiento: new Date(1995, 0, 1), rol: 'cliente' };
+export interface SolicitudModificarResena {
+  resena: Resena;
+  puntaje: number;
+  comentario: string;
 }
 
-/** Reseñas de otros usuarios sembradas por película, hasta definir la tabla `resena` en Supabase. */
-const RESENAS_DE_PRUEBA: { idPelicula: string; nombre: string; puntaje: number; comentario: string; diasAtras: number }[] = [
-  { idPelicula: 'pelicula-1', nombre: 'Martina Gómez', puntaje: 5, comentario: 'Una película increíble, la fotografía y el sonido en 3D te dejan sin palabras.', diasAtras: 2 },
-  { idPelicula: 'pelicula-1', nombre: 'Lucas Fernández', puntaje: 4, comentario: 'Muy buena, aunque el final se sintió un poco apurado.', diasAtras: 5 },
-  { idPelicula: 'pelicula-1', nombre: 'Sofía Ramírez', puntaje: 5, comentario: 'La mejor película de ciencia ficción que vi en mucho tiempo.', diasAtras: 9 },
-  { idPelicula: 'pelicula-2', nombre: 'Nicolás Torres', puntaje: 4, comentario: 'Me dejó paranoico toda la semana, el suspenso está muy bien logrado.', diasAtras: 1 },
-  { idPelicula: 'pelicula-2', nombre: 'Camila Ibáñez', puntaje: 3, comentario: 'Buena atmósfera pero el ritmo es un poco lento en el medio.', diasAtras: 6 },
-  { idPelicula: 'pelicula-4', nombre: 'Julieta Sosa', puntaje: 5, comentario: 'Hermosa animación, la llevé a mis hijos y quedaron fascinados.', diasAtras: 3 },
-  { idPelicula: 'pelicula-4', nombre: 'Diego Molina', puntaje: 5, comentario: 'Las escenas en 5D suman muchísimo, una experiencia completa.', diasAtras: 4 },
-  { idPelicula: 'pelicula-4', nombre: 'Valentina Castro', puntaje: 4, comentario: 'Muy tierna, aunque un poco corta para lo que esperaba.', diasAtras: 8 },
-];
-
-function claveResena(pelicula: Pelicula, usuario: Usuario): string {
-  return `${usuario.id}::${pelicula.id}`;
+interface FilaResena {
+  id: string;
+  puntaje: number;
+  comentario: string;
+  fecha_creacion: string;
+  fecha_edicion: string | null;
+  usuario: FilaUsuario;
+  pelicula: FilaPelicula;
 }
 
-function sembrarResenas(): Map<string, Resena> {
-  const ahora = Date.now();
-  const mapa = new Map<string, Resena>();
+const SELECT_RESENA = `id, puntaje, comentario, fecha_creacion, fecha_edicion, usuario(id, email, nombre, fecha_nacimiento, rol), pelicula(${SELECT_PELICULA})`;
 
-  RESENAS_DE_PRUEBA.forEach(({ idPelicula, nombre, puntaje, comentario, diasAtras }, indice) => {
-    const usuario = crearUsuarioDePrueba(`usuario-demo-${indice + 1}`, nombre);
-    const pelicula: Pelicula = { id: idPelicula } as Pelicula;
-    const resena: Resena = {
-      id: `resena-demo-${indice + 1}`,
-      pelicula,
-      usuario,
-      puntaje,
-      comentario,
-      fechaCreacion: new Date(ahora - diasAtras * MILISEGUNDOS_POR_DIA),
-      fechaEdicion: null,
-    };
-    mapa.set(claveResena(pelicula, usuario), resena);
-  });
-
-  return mapa;
+function convertirFilaEnResena(fila: FilaResena): Resena {
+  return {
+    id: fila.id,
+    pelicula: convertirFilaEnPelicula(fila.pelicula),
+    usuario: convertirFilaEnUsuario(fila.usuario),
+    puntaje: fila.puntaje,
+    comentario: fila.comentario,
+    fechaCreacion: new Date(fila.fecha_creacion),
+    fechaEdicion: fila.fecha_edicion ? new Date(fila.fecha_edicion) : null,
+  };
 }
 
 @Injectable({ providedIn: 'root' })
 export class ResenaService {
-  private readonly funcionService = inject(FuncionService);
-
-  // Usa almacenamiento en memoria hasta definir la tabla `resena` en Supabase.
-  private readonly resenas = signal(sembrarResenas());
-
-  /**
-   * Devuelve las películas ya asistidas por el usuario, con la butaca y
-   * fecha de asistencia, junto a la reseña ya realizada (si existe).
-   * Usa datos de prueba hasta poder consultar `orden`/`reserva` en Supabase.
-   */
-  async obtenerMisPeliculas(usuario: Usuario): Promise<AsistenciaPelicula[]> {
-    const funcionesPasadas = await this.funcionService.obtenerFuncionesPasadas();
-    const resenas = this.resenas();
-
-    return funcionesPasadas.map((funcion, indice) => ({
-      pelicula: funcion.pelicula,
-      butaca: BUTACAS_DE_PRUEBA[indice % BUTACAS_DE_PRUEBA.length],
-      fechaAsistencia: funcion.fechaFin,
-      resena: resenas.get(claveResena(funcion.pelicula, usuario)) ?? null,
-    }));
-  }
+  private readonly supabase = inject(SupabaseService);
 
   /** Devuelve las reseñas de una película, de la más reciente a la más antigua. */
   async obtenerResenasDePelicula(pelicula: Pelicula): Promise<Resena[]> {
-    return [...this.resenas().values()]
-      .filter((resena) => resena.pelicula.id === pelicula.id)
-      .sort((a, b) => b.fechaCreacion.getTime() - a.fechaCreacion.getTime());
+    const { data, error } = await this.supabase.cliente
+      .from('resena')
+      .select(SELECT_RESENA)
+      .eq('pelicula_id', pelicula.id)
+      .order('fecha_creacion', { ascending: false })
+      .returns<FilaResena[]>();
+
+    if (error) throw error;
+    return data.map(convertirFilaEnResena);
   }
 
-  /** Crea la reseña de la película, o la edita si el usuario ya había calificado. */
-  async guardarResena({ pelicula, usuario, puntaje, comentario }: SolicitudGuardarResena): Promise<Resena> {
-    const clave = claveResena(pelicula, usuario);
-    const resenaExistente = this.resenas().get(clave);
-    const ahora = new Date();
+  /** Devuelve las reseñas escritas por el usuario, de la más reciente a la más antigua. */
+  async obtenerResenasDeUsuario(idUsuario: string): Promise<Resena[]> {
+    const { data, error } = await this.supabase.cliente
+      .from('resena')
+      .select(SELECT_RESENA)
+      .eq('usuario_id', idUsuario)
+      .order('fecha_creacion', { ascending: false })
+      .returns<FilaResena[]>();
 
-    const resena: Resena = {
-      id: resenaExistente?.id ?? crypto.randomUUID(),
-      pelicula,
-      usuario,
-      puntaje,
-      comentario,
-      fechaCreacion: resenaExistente?.fechaCreacion ?? ahora,
-      fechaEdicion: resenaExistente ? ahora : null,
-    };
+    if (error) throw error;
+    return data.map(convertirFilaEnResena);
+  }
 
-    this.resenas.update((mapa) => new Map(mapa).set(clave, resena));
-    return resena;
+  /** Devuelve la cantidad total de reseñas realizadas. */
+  async contarResenas(): Promise<number> {
+    const { count, error } = await this.supabase.cliente.from('resena').select('id', { count: 'exact', head: true });
+
+    if (error) throw error;
+    return count ?? 0;
+  }
+
+  /** Crea la reseña de la película. La base de datos exige una compra previa del usuario para esa película. */
+  async crearResena({ pelicula, usuario, puntaje, comentario }: SolicitudCrearResena): Promise<Resena> {
+    const { data, error } = await this.supabase.cliente
+      .from('resena')
+      .insert({ pelicula_id: pelicula.id, usuario_id: usuario.id, puntaje, comentario })
+      .select(SELECT_RESENA)
+      .single<FilaResena>();
+
+    if (error) throw error;
+    return convertirFilaEnResena(data);
+  }
+
+  /** Actualiza puntaje y comentario de la reseña, y registra la fecha de edición. */
+  async modificarResena({ resena, puntaje, comentario }: SolicitudModificarResena): Promise<Resena> {
+    const { data, error } = await this.supabase.cliente
+      .from('resena')
+      .update({ puntaje, comentario, fecha_edicion: new Date().toISOString() })
+      .eq('id', resena.id)
+      .select(SELECT_RESENA)
+      .single<FilaResena>();
+
+    if (error) throw error;
+    return convertirFilaEnResena(data);
   }
 }

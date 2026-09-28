@@ -1,0 +1,27 @@
+<aside class="flex w-60 shrink-0 flex-col gap-1 h-full overflow-y-auto bg-slate-900 p-4 text-slate-300">
+  <p class="mb-4 px-2 text-lg font-bold text-white">CinemaHub</p>
+
+  <nav class="flex flex-col gap-1">
+    @for (item of items; track item.etiqueta) {
+      @if (item.ruta) {
+        <a
+          [routerLink]="item.ruta"
+          routerLinkActive="bg-indigo-600 text-white"
+          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-slate-800 hover:text-white"
+        >
+          <i [class]="item.icono"></i>
+          {{ item.etiqueta }}
+        </a>
+      } @else {
+        <span
+          aria-disabled="true"
+          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-500"
+        >
+          <i [class]="item.icono"></i>
+          {{ item.etiqueta }}
+          <span class="ml-auto text-[10px] uppercase tracking-wide text-slate-600">Próximamente</span>
+        </span>
+      }
+    }
+  </nav>
+</aside>

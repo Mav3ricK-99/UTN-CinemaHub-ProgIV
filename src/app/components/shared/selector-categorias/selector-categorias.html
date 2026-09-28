@@ -1,0 +1,12 @@
+<p-multiselect
+  [options]="opciones()"
+  optionLabel="nombre"
+  display="chip"
+  placeholder="Seleccioná categorías"
+  appendTo="body"
+  [fluid]="true"
+  [disabled]="disabled()"
+  [ngModel]="value()"
+  (ngModelChange)="value.set($event)"
+  (onBlur)="touched.set(true)"
+/>

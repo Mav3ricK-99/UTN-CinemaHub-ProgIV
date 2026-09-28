@@ -1,0 +1,117 @@
+<div class="flex flex-col gap-6 lg:flex-row">
+  <form
+    [formRoot]="formulario"
+    novalidate
+    class="flex min-w-0 flex-1 flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+  >
+    <div>
+      <label for="pelicula-nombre" class="mb-1 block text-sm font-semibold text-slate-700">Nombre</label>
+      <input
+        id="pelicula-nombre"
+        type="text"
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none"
+        [formField]="formulario.nombre"
+        [attr.aria-invalid]="formulario.nombre().touched() && formulario.nombre().invalid()"
+      />
+      @if (formulario.nombre().touched()) {
+        @for (error of formulario.nombre().errors(); track error.kind) {
+          <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+        }
+      }
+    </div>
+
+    <div>
+      <label for="pelicula-sinopsis" class="mb-1 block text-sm font-semibold text-slate-700">Sinopsis</label>
+      <textarea
+        id="pelicula-sinopsis"
+        rows="4"
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none"
+        [formField]="formulario.sinopsis"
+        [attr.aria-invalid]="formulario.sinopsis().touched() && formulario.sinopsis().invalid()"
+      ></textarea>
+      @if (formulario.sinopsis().touched()) {
+        @for (error of formulario.sinopsis().errors(); track error.kind) {
+          <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+        }
+      }
+    </div>
+
+    <div>
+      <label for="pelicula-duracion" class="mb-1 block text-sm font-semibold text-slate-700">Duración (minutos)</label>
+      <input
+        id="pelicula-duracion"
+        type="number"
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none"
+        [formField]="formulario.duracionMinutos"
+        [attr.aria-invalid]="formulario.duracionMinutos().touched() && formulario.duracionMinutos().invalid()"
+      />
+      @if (formulario.duracionMinutos().touched()) {
+        @for (error of formulario.duracionMinutos().errors(); track error.kind) {
+          <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+        }
+      }
+    </div>
+
+    <div>
+      <p class="mb-1 block text-sm font-semibold text-slate-700">Imagen de portada</p>
+      <p-fileupload
+        mode="basic"
+        chooseLabel="Elegir imagen"
+        chooseIcon="pi pi-image"
+        accept="image/*"
+        [maxFileSize]="5000000"
+        [auto]="false"
+        (onSelect)="alSeleccionarImagen($event)"
+      />
+      @if (imagenTocada() && !imagenArchivo()) {
+        <p class="mt-1 text-xs text-red-600">Subí una imagen de portada.</p>
+      }
+    </div>
+
+    <div>
+      <p class="mb-1 block text-sm font-semibold text-slate-700">Formato</p>
+      <app-selector-formato [formField]="formulario.formato" />
+      @if (formulario.formato().touched()) {
+        @for (error of formulario.formato().errors(); track error.kind) {
+          <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+        }
+      }
+    </div>
+
+    <div>
+      <p class="mb-1 block text-sm font-semibold text-slate-700">Idioma</p>
+      <app-selector-idioma [formField]="formulario.idioma" />
+      @if (formulario.idioma().touched()) {
+        @for (error of formulario.idioma().errors(); track error.kind) {
+          <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+        }
+      }
+    </div>
+
+    <div>
+      <p class="mb-1 block text-sm font-semibold text-slate-700">Categorías</p>
+      <app-selector-categorias [opciones]="categoriasDisponibles.value() ?? []" [formField]="formulario.categorias" />
+      @if (formulario.categorias().touched()) {
+        @for (error of formulario.categorias().errors(); track error.kind) {
+          <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+        }
+      }
+    </div>
+
+    @if (errorGeneral()) {
+      <p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ errorGeneral() }}</p>
+    }
+
+    <button
+      type="submit"
+      class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+      [disabled]="formulario().submitting()"
+    >
+      {{ formulario().submitting() ? 'Guardando...' : 'Guardar película' }}
+    </button>
+  </form>
+
+  <aside class="w-full shrink-0 lg:sticky lg:top-6 lg:w-96 lg:self-start">
+    <app-previsualizacion-pelicula [pelicula]="peliculaPreview()" />
+  </aside>
+</div>

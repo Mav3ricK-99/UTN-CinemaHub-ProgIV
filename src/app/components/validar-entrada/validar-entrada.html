@@ -1,0 +1,66 @@
+<main class="flex min-h-screen justify-center bg-neutral-950 px-6 pb-16 pt-28 text-white">
+  <section class="flex w-full max-w-md flex-col items-center gap-6 text-center">
+    <div>
+      <h1 class="text-2xl font-extrabold">Validar entrada</h1>
+      <p class="mt-1 text-sm text-neutral-400">
+        Ingresá el código alfanumérico de la orden si el lector de QR no funciona.
+      </p>
+    </div>
+
+    <p-inputotp
+      [length]="largoCodigo"
+      [integerOnly]="false"
+      [autofocus]="true"
+      [disabled]="estado() === 'buscando' || estado() === 'verificando'"
+      [ngModel]="codigo()"
+      (ngModelChange)="alCambiarCodigo($event)"
+      styleClass="justify-center"
+    />
+
+    @if (estado() === 'noEncontrada') {
+      <p class="w-full rounded-lg bg-red-950/60 px-4 py-3 text-sm text-red-300" role="alert">
+        No se encontró ninguna orden con el código ingresado.
+      </p>
+    }
+
+    @if (resultado(); as datos) {
+      <div class="w-full rounded-2xl border border-white/10 bg-neutral-900 p-6 text-left">
+        <p class="text-lg font-bold">{{ datos.reserva.funcion.pelicula.nombre }}</p>
+        <p class="mt-1 text-sm text-neutral-400">
+          Sala {{ datos.reserva.funcion.sala.nombre }} ·
+          {{ datos.reserva.funcion.fechaInicio | date: "EEEE d 'de' MMMM · HH:mm 'hs'" }}
+        </p>
+
+        <div class="mt-4 flex flex-col gap-1 text-sm text-neutral-300">
+          <p>Butacas: <span class="font-semibold text-white">{{ datos.reserva.butacas.join(', ') }}</span></p>
+          <p>
+            Comprador:
+            <span class="font-semibold text-white">
+              {{ datos.orden.usuario?.nombre ?? datos.orden.emailContacto }}
+            </span>
+          </p>
+          <p>Total: <span class="font-semibold text-white">{{ datos.orden.total | currency: 'ARS' : 'symbol' : '1.0-0' }}</span></p>
+        </div>
+
+        @if (datos.orden.verificada) {
+          <p class="mt-4 rounded-lg bg-emerald-950/60 px-4 py-3 text-sm text-emerald-300" role="status">
+            Entrada verificada el {{ datos.orden.fechaVerificacion | date: "d/M/yy 'a las' HH:mm 'hs'" }}.
+          </p>
+        } @else {
+          <button
+            type="button"
+            class="mt-4 w-full cursor-pointer rounded-full bg-red-600 px-4 py-2.5 text-sm font-semibold transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-50"
+            [disabled]="estado() === 'verificando'"
+            (click)="confirmarIngreso()"
+          >
+            {{ estado() === 'verificando' ? 'Verificando...' : 'Confirmar ingreso' }}
+          </button>
+        }
+      </div>
+    }
+
+    <button type="button" class="text-sm font-semibold text-neutral-400 underline hover:text-white" (click)="reiniciar()">
+      Verificar otro código
+    </button>
+  </section>
+</main>

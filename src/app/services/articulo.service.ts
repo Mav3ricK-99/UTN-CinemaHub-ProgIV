@@ -1,28 +1,79 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 
 import { Articulo } from '../classes/articulo';
+import { CategoriaArticulo } from '../classes/categoria-articulo';
+import { SupabaseService } from './supabase.service';
 
-const categoriaCandy = { nombre: 'Candy' };
+export interface SolicitudCrearArticulo {
+  nombre: string;
+  precio: number;
+  categoria: CategoriaArticulo;
+  disponible: boolean;
+}
 
-/** Artículos del sector candy. Datos de prueba hasta definir la tabla en Supabase. */
-const articulosCandy: Articulo[] = [
-  { id: 'candy-1', nombre: 'Pochoclos grandes', precio: 3200, categoria: categoriaCandy, disponible: true },
-  { id: 'candy-2', nombre: 'Pochoclos medianos', precio: 2400, categoria: categoriaCandy, disponible: true },
-  { id: 'candy-3', nombre: 'Gaseosa grande', precio: 2000, categoria: categoriaCandy, disponible: true },
-  { id: 'candy-4', nombre: 'Gaseosa mediana', precio: 1600, categoria: categoriaCandy, disponible: true },
-  { id: 'candy-5', nombre: 'Nachos con queso', precio: 2800, categoria: categoriaCandy, disponible: true },
-  { id: 'candy-6', nombre: 'Combo pochoclos + gaseosa', precio: 4500, categoria: categoriaCandy, disponible: true },
-  { id: 'candy-7', nombre: 'Chocolate', precio: 1800, categoria: categoriaCandy, disponible: true },
-  { id: 'candy-8', nombre: 'Agua mineral', precio: 1200, categoria: categoriaCandy, disponible: true },
-];
+/** Fila de `articulo` con su `categoria_articulo` embebida. */
+export interface FilaArticulo {
+  id: string;
+  nombre: string;
+  precio: number;
+  disponible: boolean;
+  categoria_articulo: CategoriaArticulo;
+}
+
+export function convertirFilaEnArticulo(fila: FilaArticulo): Articulo {
+  return {
+    id: fila.id,
+    nombre: fila.nombre,
+    precio: fila.precio,
+    categoria: fila.categoria_articulo,
+    disponible: fila.disponible,
+  };
+}
 
 @Injectable({ providedIn: 'root' })
 export class ArticuloService {
-  /**
-   * Devuelve los artículos disponibles del sector candy.
-   * Usa datos de prueba hasta definir la tabla en Supabase.
-   */
-  async obtenerArticulosCandy(): Promise<Articulo[]> {
-    return articulosCandy.filter((articulo) => articulo.disponible);
+  private readonly supabase = inject(SupabaseService);
+
+  /** Crea el artículo y devuelve el registro guardado. */
+  async crearArticulo({ nombre, precio, categoria, disponible }: SolicitudCrearArticulo): Promise<Articulo> {
+    const { data, error } = await this.supabase.cliente
+      .from('articulo')
+      .insert({ nombre, precio, categoria_articulo_id: categoria.id, disponible })
+      .select('id, nombre, precio, disponible, categoria_articulo(id, nombre)')
+      .single<FilaArticulo>();
+
+    if (error) throw error;
+    return convertirFilaEnArticulo(data);
+  }
+
+  /** Reemplaza los datos del artículo con el mismo id y devuelve el registro guardado. */
+  async modificarArticulo(articulo: Articulo): Promise<Articulo> {
+    const { data, error } = await this.supabase.cliente
+      .from('articulo')
+      .update({
+        nombre: articulo.nombre,
+        precio: articulo.precio,
+        categoria_articulo_id: articulo.categoria.id,
+        disponible: articulo.disponible,
+      })
+      .eq('id', articulo.id)
+      .select('id, nombre, precio, disponible, categoria_articulo(id, nombre)')
+      .single<FilaArticulo>();
+
+    if (error) throw error;
+    return convertirFilaEnArticulo(data);
+  }
+
+  /** Devuelve los artículos con `disponible = true`. */
+  async obtenerArticulosDisponibles(): Promise<Articulo[]> {
+    const { data, error } = await this.supabase.cliente
+      .from('articulo')
+      .select('id, nombre, precio, disponible, categoria_articulo(id, nombre)')
+      .eq('disponible', true)
+      .order('nombre')
+      .returns<FilaArticulo[]>();
+
+    if (error) throw error;
+    return data.map(convertirFilaEnArticulo);
   }
 }

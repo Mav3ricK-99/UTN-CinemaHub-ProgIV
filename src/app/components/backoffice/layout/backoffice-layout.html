@@ -1,0 +1,13 @@
+<div class="flex h-screen overflow-hidden bg-slate-50 text-slate-800">
+  <app-sidebar-backoffice />
+
+  <div class="flex min-w-0 flex-1 flex-col">
+    <app-navbar-backoffice />
+
+    <main class="flex-1 overflow-y-auto p-6">
+      <router-outlet />
+    </main>
+
+    <app-footer-backoffice />
+  </div>
+</div>

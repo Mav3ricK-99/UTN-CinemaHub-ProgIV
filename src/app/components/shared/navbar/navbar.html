@@ -79,7 +79,7 @@
         >
           <p-avatar [image]="avatarUrl()" size="normal" shape="circle" />
         </button>
-        <p-menu #menuUsuario [model]="itemsMenuUsuario" [popup]="true" appendTo="body" />
+        <p-menu #menuUsuario [model]="itemsMenuUsuario()" [popup]="true" appendTo="body" />
       } @else {
         <a
           routerLink="/registro"

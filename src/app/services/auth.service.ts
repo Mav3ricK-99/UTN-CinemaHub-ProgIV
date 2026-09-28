@@ -1,7 +1,12 @@
 import { inject, Injectable, signal } from '@angular/core';
 
-import { RolUsuario, Usuario } from '../classes/usuario';
+import { Pelicula } from '../classes/pelicula';
+import { Resena } from '../classes/resena';
+import { Usuario } from '../classes/usuario';
+import { OrdenService } from './orden.service';
+import { ResenaService } from './resena.service';
 import { SupabaseService } from './supabase.service';
+import { UsuarioService } from './usuario.service';
 
 export interface SolicitudRegistro {
   email: string;
@@ -19,12 +24,11 @@ export interface SolicitudIngreso {
 
 export type EstadoIngreso = 'sesionIniciada' | 'credencialesInvalidas' | 'emailSinConfirmar';
 
-interface FilaUsuario {
-  id: string;
-  email: string;
-  nombre: string;
-  fecha_nacimiento: string;
-  rol: RolUsuario;
+export interface AsistenciaPelicula {
+  pelicula: Pelicula;
+  butacas: string[];
+  fechaAsistencia: Date;
+  resena: Resena | null;
 }
 
 function formatearFechaIso(fecha: Date): string {
@@ -33,20 +37,12 @@ function formatearFechaIso(fecha: Date): string {
   return `${fecha.getFullYear()}-${mes}-${dia}`;
 }
 
-function convertirFilaEnUsuario(fila: FilaUsuario): Usuario {
-  const [anio, mes, dia] = fila.fecha_nacimiento.split('-').map(Number);
-  return {
-    id: fila.id,
-    email: fila.email,
-    nombre: fila.nombre,
-    fechaNacimiento: new Date(anio, mes - 1, dia),
-    rol: fila.rol,
-  };
-}
-
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly supabase = inject(SupabaseService);
+  private readonly ordenService = inject(OrdenService);
+  private readonly resenaService = inject(ResenaService);
+  private readonly usuarioService = inject(UsuarioService);
   private readonly usuarioActual = signal<Usuario | null>(null);
 
   /** Usuario con sesión iniciada. Vale `null` para un usuario anónimo. */
@@ -108,18 +104,51 @@ export class AuthService {
     await this.supabase.cliente.auth.signOut();
   }
 
+  /**
+   * Devuelve las películas que el usuario ya vio: las de las funciones finalizadas
+   * de sus órdenes, con las butacas reservadas y su reseña (si existe).
+   * Una película con varias órdenes aparece una vez, con la asistencia más reciente.
+   */
+  async obtenerPeliculasVistas(usuario: Usuario): Promise<AsistenciaPelicula[]> {
+    const [ordenes, resenas] = await Promise.all([
+      this.ordenService.obtenerOrdenes({ idUsuario: usuario.id }),
+      this.resenaService.obtenerResenasDeUsuario(usuario.id),
+    ]);
+
+    const resenaPorPelicula = new Map(resenas.map((resena) => [resena.pelicula.id, resena]));
+    const asistenciaPorPelicula = new Map<string, AsistenciaPelicula>();
+    const ahora = Date.now();
+
+    for (const { reserva } of ordenes) {
+      const { funcion, butacas } = reserva;
+      if (funcion.fechaFin.getTime() >= ahora) continue;
+
+      const existente = asistenciaPorPelicula.get(funcion.pelicula.id);
+      if (existente && existente.fechaAsistencia >= funcion.fechaFin) continue;
+
+      asistenciaPorPelicula.set(funcion.pelicula.id, {
+        pelicula: funcion.pelicula,
+        butacas,
+        fechaAsistencia: funcion.fechaFin,
+        resena: resenaPorPelicula.get(funcion.pelicula.id) ?? null,
+      });
+    }
+
+    return [...asistenciaPorPelicula.values()].sort(
+      (a, b) => b.fechaAsistencia.getTime() - a.fechaAsistencia.getTime(),
+    );
+  }
+
   private async cargarUsuario(idUsuario: string | null): Promise<void> {
     if (!idUsuario) {
       this.usuarioActual.set(null);
       return;
     }
 
-    const { data, error } = await this.supabase.cliente
-      .from('usuario')
-      .select('id, email, nombre, fecha_nacimiento, rol')
-      .eq('id', idUsuario)
-      .single<FilaUsuario>();
-
-    this.usuarioActual.set(error ? null : convertirFilaEnUsuario(data));
+    try {
+      this.usuarioActual.set(await this.usuarioService.obtenerUsuarioPorId(idUsuario));
+    } catch {
+      this.usuarioActual.set(null);
+    }
   }
 }

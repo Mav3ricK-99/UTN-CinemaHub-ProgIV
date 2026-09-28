@@ -2,7 +2,8 @@ import { DatePipe } from '@angular/common';
 import { Component, inject, input, linkedSignal, signal } from '@angular/core';
 
 import { Usuario } from '../../../classes/usuario';
-import { AsistenciaPelicula, ResenaService } from '../../../services/resena.service';
+import { AsistenciaPelicula } from '../../../services/auth.service';
+import { ResenaService } from '../../../services/resena.service';
 
 const PUNTAJE_MAXIMO = 5;
 
@@ -42,7 +43,7 @@ export class TarjetaPeliculaVista {
 
     this.guardando.set(true);
     try {
-      const resena = await this.resenaService.guardarResena({
+      const resena = await this.resenaService.crearResena({
         pelicula: this.asistencia().pelicula,
         usuario: this.usuario(),
         puntaje: this.puntajeSeleccionado(),
