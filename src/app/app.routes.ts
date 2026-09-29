@@ -65,6 +65,30 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./components/backoffice/peliculas/peliculas').then((modulo) => modulo.Peliculas),
       },
+      {
+        path: 'funciones',
+        loadComponent: () =>
+          import('./components/backoffice/funciones/funciones').then((modulo) => modulo.Funciones),
+      },
+      {
+        path: 'articulos',
+        loadComponent: () =>
+          import('./components/backoffice/articulos/articulos').then((modulo) => modulo.Articulos),
+      },
+      {
+        path: 'articulos/nuevo',
+        loadComponent: () =>
+          import('./components/backoffice/articulos/nuevo-articulo/nuevo-articulo').then(
+            (modulo) => modulo.NuevoArticulo,
+          ),
+      },
+      {
+        path: 'funciones/nueva',
+        loadComponent: () =>
+          import('./components/backoffice/funciones/nueva-funcion/nueva-funcion').then(
+            (modulo) => modulo.NuevaFuncion,
+          ),
+      },
     ],
   },
 ];

@@ -1,3 +1,7 @@
 @layer theme, base, primeng, components, utilities;
 @import "tailwindcss";
 @import "primeicons/primeicons.css";
+
+.p-paginator {
+    border-radius: inherit;
+}

@@ -1,0 +1,21 @@
+<div class="flex flex-col gap-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">Nuevo artículo</h1>
+      <p class="text-sm text-slate-500">Completá los datos para agregarlo al catálogo.</p>
+    </div>
+    <a routerLink="/backoffice/articulos" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+      Volver al listado
+    </a>
+  </div>
+
+  @if (mensajeExito()) {
+    <p class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700" role="status">
+      {{ mensajeExito() }}
+    </p>
+  }
+
+  @if (mostrarFormulario()) {
+    <app-formulario-articulo (creado)="alCrearArticulo($event)" />
+  }
+</div>

@@ -3,10 +3,13 @@ import { form, FormField, FormRoot, max, maxLength, min, required, validate } fr
 import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
 
 import { Categoria } from '../../../../classes/categoria';
+import { Clasificacion } from '../../../../classes/clasificacion';
 import { FormatoPelicula, IdiomaPelicula, Pelicula } from '../../../../classes/pelicula';
 import { CategoriaService } from '../../../../services/categoria.service';
+import { ClasificacionService } from '../../../../services/clasificacion.service';
 import { PeliculaService } from '../../../../services/pelicula.service';
 import { SelectorCategorias } from '../../../shared/selector-categorias/selector-categorias';
+import { SelectorClasificacion } from '../../../shared/selector-clasificacion/selector-clasificacion';
 import { SelectorFormato } from '../../../shared/selector-formato/selector-formato';
 import { SelectorIdioma } from '../../../shared/selector-idioma/selector-idioma';
 import { PrevisualizacionPelicula } from './previsualizacion-pelicula/previsualizacion-pelicula';
@@ -23,25 +26,47 @@ interface ModeloPelicula {
   formato: FormatoPelicula | null;
   idioma: IdiomaPelicula | null;
   categorias: Categoria[];
+  clasificacion: Clasificacion | null;
 }
 
 function crearModeloVacio(): ModeloPelicula {
-  return { nombre: '', sinopsis: '', duracionMinutos: null, formato: null, idioma: null, categorias: [] };
+  return {
+    nombre: '',
+    sinopsis: '',
+    duracionMinutos: null,
+    formato: '2D',
+    idioma: 'Castellano',
+    categorias: [],
+    clasificacion: null,
+  };
 }
 
 @Component({
   selector: 'app-formulario-pelicula',
-  imports: [FormField, FormRoot, FileUpload, SelectorFormato, SelectorIdioma, SelectorCategorias, PrevisualizacionPelicula],
+  imports: [
+    FormField,
+    FormRoot,
+    FileUpload,
+    SelectorFormato,
+    SelectorIdioma,
+    SelectorClasificacion,
+    SelectorCategorias,
+    PrevisualizacionPelicula,
+  ],
   templateUrl: './formulario-pelicula.html',
 })
 export class FormularioPelicula {
   private readonly categoriaService = inject(CategoriaService);
+  private readonly clasificacionService = inject(ClasificacionService);
   private readonly peliculaService = inject(PeliculaService);
 
   readonly creada = output<Pelicula>();
 
   protected readonly modelo = signal(crearModeloVacio());
   protected readonly categoriasDisponibles = resource({ loader: () => this.categoriaService.obtenerCategorias() });
+  protected readonly clasificacionesDisponibles = resource({
+    loader: () => this.clasificacionService.obtenerClasificaciones(),
+  });
 
   protected readonly imagenArchivo = signal<File | null>(null);
   protected readonly imagenPreviewUrl = signal<string | null>(null);
@@ -50,7 +75,7 @@ export class FormularioPelicula {
 
   /** Arma una `Pelicula` con los datos ingresados hasta el momento, para la previsualización en vivo. */
   protected readonly peliculaPreview = computed<Pelicula>(() => {
-    const { nombre, sinopsis, duracionMinutos, formato, idioma, categorias } = this.modelo();
+    const { nombre, sinopsis, duracionMinutos, formato, idioma, categorias, clasificacion } = this.modelo();
     return {
       id: 'preview',
       nombre: nombre.trim() || 'Nombre de la película',
@@ -60,6 +85,7 @@ export class FormularioPelicula {
       formato: formato ?? '2D',
       idioma: idioma ?? 'Castellano',
       categorias,
+      clasificacion,
       promedioResenas: 0,
       cantidadResenas: 0,
     };
@@ -85,6 +111,7 @@ export class FormularioPelicula {
 
       required(ruta.formato, { message: 'Seleccioná el formato.' });
       required(ruta.idioma, { message: 'Seleccioná el idioma.' });
+      required(ruta.clasificacion, { message: 'Seleccioná la clasificación.' });
 
       validate(ruta.categorias, alMenosUnaCategoria());
     },
@@ -100,8 +127,8 @@ export class FormularioPelicula {
             return undefined;
           }
 
-          const { nombre, sinopsis, duracionMinutos, formato, idioma, categorias } = this.modelo();
-          if (!duracionMinutos || !formato || !idioma) return undefined;
+          const { nombre, sinopsis, duracionMinutos, formato, idioma, categorias, clasificacion } = this.modelo();
+          if (!duracionMinutos || !formato || !idioma || !clasificacion) return undefined;
 
           try {
             const pelicula = await this.peliculaService.crearPelicula({
@@ -111,6 +138,7 @@ export class FormularioPelicula {
               formato,
               idioma,
               categorias,
+              clasificacion,
               imagen,
             });
             this.creada.emit(pelicula);

@@ -28,7 +28,7 @@
             <p>
               Función:
               <span class="font-semibold text-white">
-                {{ datos.reserva.funcion.fechaInicio | date: "EEEE d 'de' MMMM · HH:mm 'hs'" }}
+                {{ datos.reserva.funcion.fechaInicio | date: "EEEE d 'de' MMMM · HH:mm 'hs'" : 'UTC' }}
               </span>
             </p>
           </div>

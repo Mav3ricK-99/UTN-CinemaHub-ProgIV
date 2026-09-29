@@ -22,6 +22,9 @@
       Idioma: <span class="font-semibold text-slate-700">{{ pelicula().idioma }}</span>
       · Formato: <span class="font-semibold text-slate-700">{{ pelicula().formato }}</span>
       · Duración: <span class="font-semibold text-slate-700">{{ pelicula().duracionMinutos }} min</span>
+      @if (pelicula().clasificacion; as clasificacion) {
+        · Clasificación: <span class="font-semibold text-slate-700">{{ clasificacion.codigo }}</span>
+      }
     </p>
     @if (pelicula().categorias.length > 0) {
       <ul class="flex flex-wrap gap-2 text-xs">

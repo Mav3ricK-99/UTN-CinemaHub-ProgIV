@@ -27,7 +27,7 @@
               />
               <div class="min-w-0">
                 <p class="truncate text-sm font-semibold">{{ resena.usuario.nombre }}</p>
-                <p class="text-xs text-neutral-400">{{ resena.fechaCreacion | date: 'd MMM y' }}</p>
+                <p class="text-xs text-neutral-400">{{ resena.fechaCreacion | date: 'd MMM y' : 'UTC' }}</p>
               </div>
             </div>
             <app-estrellas-calificacion [puntaje]="resena.puntaje" />

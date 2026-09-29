@@ -38,7 +38,7 @@ export class ArticuloService {
   async crearArticulo({ nombre, precio, categoria, disponible }: SolicitudCrearArticulo): Promise<Articulo> {
     const { data, error } = await this.supabase.cliente
       .from('articulo')
-      .insert({ nombre, precio, categoria_articulo_id: categoria.id, disponible })
+      .insert({ nombre, precio, categoria_id: categoria.id, disponible })
       .select('id, nombre, precio, disponible, categoria_articulo(id, nombre)')
       .single<FilaArticulo>();
 
@@ -53,7 +53,7 @@ export class ArticuloService {
       .update({
         nombre: articulo.nombre,
         precio: articulo.precio,
-        categoria_articulo_id: articulo.categoria.id,
+        categoria_id: articulo.categoria.id,
         disponible: articulo.disponible,
       })
       .eq('id', articulo.id)
@@ -62,6 +62,18 @@ export class ArticuloService {
 
     if (error) throw error;
     return convertirFilaEnArticulo(data);
+  }
+
+  /** Devuelve todos los artículos, disponibles o no. */
+  async obtenerArticulos(): Promise<Articulo[]> {
+    const { data, error } = await this.supabase.cliente
+      .from('articulo')
+      .select('id, nombre, precio, disponible, categoria_articulo(id, nombre)')
+      .order('nombre')
+      .returns<FilaArticulo[]>();
+
+    if (error) throw error;
+    return data.map(convertirFilaEnArticulo);
   }
 
   /** Devuelve los artículos con `disponible = true`. */

@@ -1,0 +1,10 @@
+<p-selectbutton
+  [options]="opciones()"
+  optionLabel="codigo"
+  dataKey="codigo"
+  [unselectable]="true"
+  [disabled]="disabled()"
+  [ngModel]="value()"
+  (ngModelChange)="value.set($event)"
+  (onChange)="touched.set(true)"
+/>

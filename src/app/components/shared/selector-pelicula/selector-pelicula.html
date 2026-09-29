@@ -1,0 +1,34 @@
+<p-select
+  [options]="opciones()"
+  optionLabel="nombre"
+  dataKey="id"
+  [checkmark]="true"
+  [filter]="true"
+  filterBy="nombre"
+  appendTo="body"
+  placeholder="Seleccioná la película"
+  [fluid]="true"
+  [disabled]="disabled()"
+  [ngModel]="value()"
+  (ngModelChange)="value.set($event)"
+  (onBlur)="touched.set(true)"
+>
+  <ng-template #item let-pelicula>
+    <div class="flex items-start gap-3 py-1">
+      <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+        <i class="pi {{ icono(pelicula) }}"></i>
+      </span>
+      <div class="flex min-w-0 flex-col">
+        <span class="truncate font-medium text-slate-800">{{ pelicula.nombre }}</span>
+        <span class="max-w-80 truncate text-xs text-slate-500">{{ pelicula.sinopsis }}</span>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #selectedItem let-pelicula>
+    <div class="flex items-center gap-2">
+      <i class="pi {{ icono(pelicula) }}"></i>
+      <span>{{ pelicula.nombre }}</span>
+    </div>
+  </ng-template>
+</p-select>

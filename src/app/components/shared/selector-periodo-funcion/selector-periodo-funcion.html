@@ -1,0 +1,30 @@
+<div class="flex flex-col gap-3 sm:flex-row sm:items-start">
+  <div class="flex-1">
+    <p-datepicker
+      selectionMode="range"
+      dateFormat="dd/mm/yy"
+      iconDisplay="input"
+      appendTo="body"
+      placeholder="Rango de fechas"
+      [showIcon]="true"
+      [fluid]="true"
+      [minDate]="minDate"
+      [disabled]="disabled()"
+      [ngModel]="rango()"
+      (ngModelChange)="alCambiarRango($event)"
+      (onBlur)="touched.set(true)"
+    />
+  </div>
+  <div class="sm:w-36">
+    <p-datepicker
+      [timeOnly]="true"
+      appendTo="body"
+      placeholder="Horario"
+      [fluid]="true"
+      [disabled]="disabled()"
+      [ngModel]="horaSeleccionada()"
+      (ngModelChange)="alCambiarHorario($event)"
+      (onBlur)="touched.set(true)"
+    />
+  </div>
+</div>

@@ -1,0 +1,74 @@
+<div class="flex flex-col gap-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">Funciones</h1>
+      <p class="text-sm text-slate-500">Listado de funciones cargadas. Las próximas a realizarse se destacan.</p>
+    </div>
+    <a
+      routerLink="/backoffice/funciones/nueva"
+      class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500"
+    >
+      Nueva función
+    </a>
+  </div>
+
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <p-table
+      [value]="funciones.value() ?? []"
+      [loading]="funciones.isLoading()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      sortMode="single"
+      sortField="fechaInicio"
+      [sortOrder]="1"
+      dataKey="id"
+      styleClass="text-sm"
+    >
+      <ng-template #header>
+        <tr class="bg-slate-50 text-xs font-semibold uppercase text-slate-500">
+          <th pSortableColumn="pelicula.nombre" class="px-4 py-3">
+            Película
+            <p-sortIcon field="pelicula.nombre" />
+          </th>
+          <th pSortableColumn="pelicula.duracionMinutos" class="px-4 py-3">
+            Duración
+            <p-sortIcon field="pelicula.duracionMinutos" />
+          </th>
+          <th class="px-4 py-3">Categorías</th>
+          <th class="px-4 py-3">Idioma</th>
+          <th pSortableColumn="fechaInicio" class="px-4 py-3">
+            Inicio de función
+            <p-sortIcon field="fechaInicio" />
+          </th>
+          <th class="px-4 py-3">Sala libre desde</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-funcion>
+        <tr [class.bg-indigo-50]="esProxima(funcion)">
+          <td class="px-4 py-3 font-medium text-slate-800">{{ funcion.pelicula.nombre }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ funcion.pelicula.duracionMinutos }} min</td>
+          <td class="px-4 py-3">
+            <div class="flex flex-wrap gap-1">
+              @for (categoria of funcion.pelicula.categorias; track categoria.id) {
+                <p-tag [value]="categoria.nombre" severity="secondary" />
+              }
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            <p-tag [value]="funcion.pelicula.idioma" severity="info" />
+          </td>
+          <td class="px-4 py-3 text-slate-600">{{ funcion.fechaInicio | date: 'EEE d MMM · HH:mm' : 'UTC' }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ salaLibreDesde(funcion) | date: 'EEE d MMM · HH:mm' : 'UTC' }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="6" class="px-4 py-6 text-center text-slate-500">No hay funciones cargadas.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

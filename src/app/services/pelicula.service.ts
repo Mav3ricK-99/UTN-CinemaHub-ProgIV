@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { Categoria } from '../classes/categoria';
+import { Clasificacion } from '../classes/clasificacion';
 import { FormatoPelicula, IdiomaPelicula, Pelicula } from '../classes/pelicula';
 import { SupabaseService } from './supabase.service';
 
@@ -13,12 +14,13 @@ export interface SolicitudCrearPelicula {
   formato: FormatoPelicula;
   idioma: IdiomaPelicula;
   categorias: Categoria[];
+  clasificacion: Clasificacion;
   imagen: File;
 }
 
 /** Columnas de `pelicula` con sus categorías. Otros servicios lo anidan en sus consultas. */
 export const SELECT_PELICULA =
-  'id, nombre, sinopsis, duracion_minutos, imagen_url, formato, idioma, promedio_resenas, cantidad_resenas, pelicula_categoria(categoria(id, nombre))';
+  'id, nombre, sinopsis, duracion_minutos, imagen_url, formato, idioma, promedio_resenas, cantidad_resenas, clasificacion(codigo, descripcion), pelicula_categoria(categoria(id, nombre))';
 
 /** Fila de `pelicula` tal como la devuelve PostgREST con `SELECT_PELICULA`. */
 export interface FilaPelicula {
@@ -31,6 +33,7 @@ export interface FilaPelicula {
   idioma: IdiomaPelicula;
   promedio_resenas: number | null;
   cantidad_resenas: number | null;
+  clasificacion: Clasificacion | null;
   pelicula_categoria: { categoria: Categoria }[];
 }
 
@@ -44,6 +47,7 @@ export function convertirFilaEnPelicula(fila: FilaPelicula): Pelicula {
     formato: fila.formato,
     idioma: fila.idioma,
     categorias: fila.pelicula_categoria.map(({ categoria }) => categoria),
+    clasificacion: fila.clasificacion,
     promedioResenas: fila.promedio_resenas ?? 0,
     cantidadResenas: fila.cantidad_resenas ?? 0,
   };
@@ -78,6 +82,7 @@ export class PeliculaService {
         imagen_url: imagenUrl,
         formato: solicitud.formato,
         idioma: solicitud.idioma,
+        clasificacion_id: solicitud.clasificacion.id,
       })
       .select(SELECT_PELICULA)
       .single<FilaPelicula>();

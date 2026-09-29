@@ -4,15 +4,17 @@ import { email, form, FormField, FormRoot, validate } from '@angular/forms/signa
 import { Router, RouterLink } from '@angular/router';
 
 import { Articulo } from '../../classes/articulo';
+import { obtenerEdadMinima } from '../../classes/clasificacion';
 import { ArticuloService } from '../../services/articulo.service';
 import { AuthService } from '../../services/auth.service';
 import { FuncionService } from '../../services/funcion.service';
 import { OrdenService } from '../../services/orden.service';
+import { calcularEdad } from '../registro/validadores-registro';
 import { EstrellasCalificacion } from '../shared/estrellas-calificacion/estrellas-calificacion';
 import { CarrouselArticulos } from './carrousel-articulos/carrousel-articulos';
 import { MapaButacas } from './mapa-butacas/mapa-butacas';
 import { ResenasPelicula } from './resenas-pelicula/resenas-pelicula';
-import { requeridoSiAnonimo } from './validadores-seleccion-butaca';
+import { requeridoSiAnonimo, requeridoSiRequiereAcompanante } from './validadores-seleccion-butaca';
 
 const MILISEGUNDOS_POR_MINUTO = 60 * 1000;
 const MINUTOS_POR_HORA = 60;
@@ -83,13 +85,23 @@ export class SeleccionButaca {
     return partes.join(' ');
   });
 
-  protected readonly modelo = signal({ emailContacto: '' });
+  /** `true` si el comprador no alcanza la edad mínima de la clasificación. Un comprador anónimo no acredita edad. */
+  protected readonly requiereAcompanante = computed(() => {
+    const edadMinima = obtenerEdadMinima(this.funcion.value()?.pelicula.clasificacion ?? null);
+    if (edadMinima === 0) return false;
+
+    const usuario = this.usuario();
+    return !usuario || calcularEdad(usuario.fechaNacimiento) < edadMinima;
+  });
+
+  protected readonly modelo = signal({ emailContacto: '', acompanado: false });
 
   protected readonly formulario = form(
     this.modelo,
     (ruta) => {
       email(ruta.emailContacto, { message: 'Ingresá un correo electrónico válido.' });
       validate(ruta.emailContacto, requeridoSiAnonimo(this.usuario));
+      validate(ruta.acompanado, requeridoSiRequiereAcompanante(this.requiereAcompanante));
     },
     {
       submission: {
@@ -115,6 +127,14 @@ export class SeleccionButaca {
         },
       },
     },
+  );
+
+  /** Exige butacas elegidas, la confirmación de acompañante (si corresponde) y ninguna reserva en curso. */
+  protected readonly reservaHabilitada = computed(
+    () =>
+      this.butacasSeleccionadas().length > 0 &&
+      (!this.requiereAcompanante() || this.modelo().acompanado) &&
+      !this.formulario().submitting(),
   );
 
   constructor() {

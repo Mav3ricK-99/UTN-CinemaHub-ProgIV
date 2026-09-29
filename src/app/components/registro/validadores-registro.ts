@@ -4,7 +4,7 @@ const LARGO_MINIMO_NOMBRE = 3;
 const LARGO_MINIMO_CONTRASENA = 6;
 const MAYUSCULAS_MINIMAS_CONTRASENA = 1;
 const NUMEROS_MINIMOS_CONTRASENA = 2;
-const EDAD_MINIMA = 18;
+const EDAD_MINIMA = 13;
 const EDAD_MAXIMA = 120;
 
 export function nombreConLetrasMinimas(): FieldValidator<string, PathKind.Child> {

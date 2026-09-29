@@ -1,0 +1,67 @@
+<form
+  [formRoot]="formulario"
+  novalidate
+  class="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+>
+  <div>
+    <label for="articulo-nombre" class="mb-1 block text-sm font-semibold text-slate-700">Nombre</label>
+    <input
+      id="articulo-nombre"
+      type="text"
+      class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none"
+      [formField]="formulario.nombre"
+      [attr.aria-invalid]="formulario.nombre().touched() && formulario.nombre().invalid()"
+    />
+    @if (formulario.nombre().touched()) {
+      @for (error of formulario.nombre().errors(); track error.kind) {
+        <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+      }
+    }
+  </div>
+
+  <div>
+    <p class="mb-1 block text-sm font-semibold text-slate-700">Disponibilidad</p>
+    <app-selector-disponibilidad [formField]="formulario.disponible" />
+  </div>
+
+  <div>
+    <label for="articulo-precio" class="mb-1 block text-sm font-semibold text-slate-700">Precio</label>
+    <input
+      id="articulo-precio"
+      type="number"
+      class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none"
+      [formField]="formulario.precio"
+      [attr.aria-invalid]="formulario.precio().touched() && formulario.precio().invalid()"
+    />
+    @if (formulario.precio().touched()) {
+      @for (error of formulario.precio().errors(); track error.kind) {
+        <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+      }
+    }
+  </div>
+
+  <div>
+    <p class="mb-1 block text-sm font-semibold text-slate-700">Categoría</p>
+    <app-selector-categoria-articulo
+      [opciones]="categoriasDisponibles.value() ?? []"
+      [formField]="formulario.categoria"
+    />
+    @if (formulario.categoria().touched()) {
+      @for (error of formulario.categoria().errors(); track error.kind) {
+        <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+      }
+    }
+  </div>
+
+  @if (errorGeneral()) {
+    <p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ errorGeneral() }}</p>
+  }
+
+  <button
+    type="submit"
+    class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+    [disabled]="formulario().submitting()"
+  >
+    {{ formulario().submitting() ? 'Guardando...' : 'Guardar artículo' }}
+  </button>
+</form>

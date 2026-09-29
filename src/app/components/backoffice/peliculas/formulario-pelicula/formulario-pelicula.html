@@ -89,6 +89,19 @@
     </div>
 
     <div>
+      <p class="mb-1 block text-sm font-semibold text-slate-700">Clasificación</p>
+      <app-selector-clasificacion
+        [opciones]="clasificacionesDisponibles.value() ?? []"
+        [formField]="formulario.clasificacion"
+      />
+      @if (formulario.clasificacion().touched()) {
+        @for (error of formulario.clasificacion().errors(); track error.kind) {
+          <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+        }
+      }
+    </div>
+
+    <div>
       <p class="mb-1 block text-sm font-semibold text-slate-700">Categorías</p>
       <app-selector-categorias [opciones]="categoriasDisponibles.value() ?? []" [formField]="formulario.categorias" />
       @if (formulario.categorias().touched()) {

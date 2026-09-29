@@ -15,7 +15,7 @@
     <ul class="flex flex-wrap gap-2 text-xs text-neutral-300">
       <li class="rounded-full bg-white/10 px-3 py-1">{{ asistencia().butacas.length === 1 ? 'Butaca' : 'Butacas' }} {{ asistencia().butacas.join(', ') }}</li>
       <li class="rounded-full bg-white/10 px-3 py-1">
-        {{ asistencia().fechaAsistencia | date: "d 'de' MMMM y" }}
+        {{ asistencia().fechaAsistencia | date: "d 'de' MMMM y" : 'UTC' }}
       </li>
     </ul>
 

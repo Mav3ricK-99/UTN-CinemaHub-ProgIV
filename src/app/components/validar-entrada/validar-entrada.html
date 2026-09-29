@@ -28,7 +28,7 @@
         <p class="text-lg font-bold">{{ datos.reserva.funcion.pelicula.nombre }}</p>
         <p class="mt-1 text-sm text-neutral-400">
           Sala {{ datos.reserva.funcion.sala.nombre }} ·
-          {{ datos.reserva.funcion.fechaInicio | date: "EEEE d 'de' MMMM · HH:mm 'hs'" }}
+          {{ datos.reserva.funcion.fechaInicio | date: "EEEE d 'de' MMMM · HH:mm 'hs'" : 'UTC' }}
         </p>
 
         <div class="mt-4 flex flex-col gap-1 text-sm text-neutral-300">
@@ -44,7 +44,7 @@
 
         @if (datos.orden.verificada) {
           <p class="mt-4 rounded-lg bg-emerald-950/60 px-4 py-3 text-sm text-emerald-300" role="status">
-            Entrada verificada el {{ datos.orden.fechaVerificacion | date: "d/M/yy 'a las' HH:mm 'hs'" }}.
+            Entrada verificada el {{ datos.orden.fechaVerificacion | date: "d/M/yy 'a las' HH:mm 'hs'" : 'UTC' }}.
           </p>
         } @else {
           <button

@@ -1,0 +1,12 @@
+<p-select
+  [options]="opciones()"
+  optionLabel="nombre"
+  dataKey="id"
+  placeholder="Seleccioná una categoría"
+  appendTo="body"
+  [fluid]="true"
+  [disabled]="disabled()"
+  [ngModel]="value()"
+  (ngModelChange)="value.set($event)"
+  (onBlur)="touched.set(true)"
+/>

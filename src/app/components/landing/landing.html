@@ -4,7 +4,7 @@
   } @else if (funcionesProximas.error()) {
     <p class="px-6 py-24 text-center text-neutral-400">No se pudo cargar la cartelera.</p>
   } @else {
-    @let funciones = funcionesProximas.value() ?? [];
+    @let funciones = funcionesProximasUnicas();
     @if (funciones.length > 0) {
       <app-cartelera-slider [funciones]="funciones" />
     } @else {
@@ -15,6 +15,6 @@
   <app-informacion-cine />
 
   @if (!funcionesPasadas.error()) {
-    <app-funciones-pasadas [funciones]="funcionesPasadas.value() ?? []" />
+    <app-funciones-pasadas [funciones]="funcionesPasadasUnicas()" />
   }
 </main>

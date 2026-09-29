@@ -35,9 +35,16 @@ Incluye:
 | imagenUrl | string | |
 | formato | enum | `2D` \| `3D` \| `4D` \| `5D` |
 | idioma | enum | `Castellano` \| `Subtitulada` |
-| categorias | Categoria[] | relación muchos a muchos 
+| categorias | Categoria[] | relación muchos a muchos |
+| clasificacion | Clasificacion \| null | referencia a la clasificación de edad de la película |
 | promedioResenas | number | cache — sincronizado por trigger a partir de `Resena` |
 | cantidadResenas | number | cache — cantidad total de reseñas, útil para mostrar "(124 reseñas)" en la UI |
+
+#### Clasificacion
+| Campo | Tipo | Notas |
+|---|---|---|
+| codigo | string | ej: `ATP`, `+13`, `+18` — único |
+| descripcion | string | |
 
 #### Categoria
 | Campo | Tipo | Notas |

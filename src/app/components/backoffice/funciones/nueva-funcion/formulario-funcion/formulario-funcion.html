@@ -1,0 +1,63 @@
+<form [formRoot]="formulario" novalidate class="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+  <div>
+    <p class="mb-1 block text-sm font-semibold text-slate-700">Película</p>
+    <app-selector-pelicula [opciones]="peliculasDisponibles.value() ?? []" [formField]="formulario.pelicula" />
+    @if (formulario.pelicula().touched()) {
+      @for (error of formulario.pelicula().errors(); track error.kind) {
+        <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+      }
+    }
+  </div>
+
+  <div>
+    <p class="mb-1 block text-sm font-semibold text-slate-700">Días de la semana</p>
+    <app-selector-dias-semana [formField]="formulario.diasSemana" />
+    @if (formulario.diasSemana().touched()) {
+      @for (error of formulario.diasSemana().errors(); track error.kind) {
+        <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+      }
+    }
+  </div>
+
+  <div>
+    <p class="mb-1 block text-sm font-semibold text-slate-700">Rango de fechas y horario</p>
+    <app-selector-periodo-funcion [formField]="formulario.periodo" />
+    <p class="mt-1 flex items-center gap-1 text-xs text-slate-500">
+      <i class="pi pi-info-circle"></i>
+      La finalización de la función es la duración de la película.
+    </p>
+    @if (formulario.periodo().touched()) {
+      @for (error of formulario.periodo().errors(); track error.kind) {
+        <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+      }
+    }
+  </div>
+
+  <div>
+    <label for="funcion-precio" class="mb-1 block text-sm font-semibold text-slate-700">Precio</label>
+    <input
+      id="funcion-precio"
+      type="number"
+      class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none"
+      [formField]="formulario.precio"
+      [attr.aria-invalid]="formulario.precio().touched() && formulario.precio().invalid()"
+    />
+    @if (formulario.precio().touched()) {
+      @for (error of formulario.precio().errors(); track error.kind) {
+        <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+      }
+    }
+  </div>
+
+  @if (errorGeneral()) {
+    <p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ errorGeneral() }}</p>
+  }
+
+  <button
+    type="submit"
+    class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+    [disabled]="formulario().submitting()"
+  >
+    {{ formulario().submitting() ? 'Creando funciones...' : 'Crear funciones' }}
+  </button>
+</form>

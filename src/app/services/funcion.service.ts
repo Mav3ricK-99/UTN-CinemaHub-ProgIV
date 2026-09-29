@@ -20,6 +20,41 @@ export interface PeliculaMasVista {
   espectadores: number;
 }
 
+export interface SolicitudCrearFuncionesRecurrentes {
+  peliculaId: string;
+  diasSemana: number[];
+  horario: string;
+  fechaDesde: string;
+  fechaHasta: string;
+  precio: number;
+}
+
+export interface FuncionRecurrenteCreada {
+  funcionId: string;
+  salaId: string;
+  salaNombre: string;
+  fechaInicio: Date;
+  fechaFin: Date;
+}
+
+interface FilaFuncionRecurrenteCreada {
+  funcion_id: string;
+  sala_id: string;
+  sala_nombre: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+}
+
+function convertirFilaEnFuncionRecurrenteCreada(fila: FilaFuncionRecurrenteCreada): FuncionRecurrenteCreada {
+  return {
+    funcionId: fila.funcion_id,
+    salaId: fila.sala_id,
+    salaNombre: fila.sala_nombre,
+    fechaInicio: new Date(fila.fecha_inicio),
+    fechaFin: new Date(fila.fecha_fin),
+  };
+}
+
 /** Columnas de `funcion` con su película y su sala (sin butacas). Otros servicios lo anidan en sus consultas. */
 export const SELECT_FUNCION = `id, fecha_inicio, fecha_fin, precio, butacas_reservadas, pelicula(${SELECT_PELICULA}), sala(id, nombre)`;
 
@@ -81,6 +116,32 @@ export class FuncionService {
     return convertirFilaEnFuncion(data);
   }
 
+  /**
+   * Crea una función recurrente para los días de la semana indicados dentro del rango de
+   * fechas dado. La sala se asigna automáticamente: la base de datos rechaza la operación
+   * si no encuentra ninguna sala libre para algún día del rango.
+   */
+  async crearFuncionesRecurrentes({
+    peliculaId,
+    diasSemana,
+    horario,
+    fechaDesde,
+    fechaHasta,
+    precio,
+  }: SolicitudCrearFuncionesRecurrentes): Promise<FuncionRecurrenteCreada[]> {
+    const { data, error } = await this.supabase.cliente.rpc('crear_funciones_recurrentes', {
+      p_pelicula_id: peliculaId,
+      p_dias_semana: diasSemana,
+      p_hora: horario,
+      p_fecha_desde: fechaDesde,
+      p_fecha_hasta: fechaHasta,
+      p_precio: precio,
+    });
+
+    if (error) throw error;
+    return (data as FilaFuncionRecurrenteCreada[]).map(convertirFilaEnFuncionRecurrenteCreada);
+  }
+
   /** Elimina la función con el id indicado. */
   async eliminarFuncion(idFuncion: string): Promise<void> {
     const { error } = await this.supabase.cliente.from('funcion').delete().eq('id', idFuncion);
@@ -97,6 +158,18 @@ export class FuncionService {
 
     if (error) throw error;
     return data ? convertirFilaEnFuncion(data) : null;
+  }
+
+  /** Devuelve todas las funciones cargadas, ordenadas por fecha de inicio. */
+  async obtenerFunciones(): Promise<Funcion[]> {
+    const { data, error } = await this.supabase.cliente
+      .from('funcion')
+      .select(SELECT_FUNCION)
+      .order('fecha_inicio')
+      .returns<FilaFuncion[]>();
+
+    if (error) throw error;
+    return data.map(convertirFilaEnFuncion);
   }
 
   /** Devuelve las funciones que aún no comenzaron, ordenadas por fecha de inicio. */
