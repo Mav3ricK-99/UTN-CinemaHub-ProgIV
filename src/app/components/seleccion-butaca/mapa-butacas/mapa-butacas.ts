@@ -8,7 +8,14 @@ export const MAXIMO_BUTACAS_SELECCIONADAS = 5;
 /** Cantidad de columnas de cada bloque separado por pasillos (4 + 20 + 4 = 28 columnas). */
 const COLUMNAS_POR_BLOQUE = [4, 20, 4];
 
-type EstadoButaca = 'disponible' | 'seleccionada' | 'ocupada' | 'especialDisponible' | 'especialOcupada';
+type EstadoButaca =
+  | 'disponible'
+  | 'seleccionada'
+  | 'ocupada'
+  | 'especialDisponible'
+  | 'especialOcupada'
+  | 'discapacitadosDisponible'
+  | 'discapacitadosOcupada';
 
 interface ButacaMapa {
   id: string;
@@ -28,6 +35,8 @@ const CLASE_COLOR_ESTADO: Record<EstadoButaca, string> = {
   ocupada: 'text-[#305543]',
   especialDisponible: 'text-[#f0d878]',
   especialOcupada: 'text-[#857233]',
+  discapacitadosDisponible: 'text-sky-400',
+  discapacitadosOcupada: 'text-[#2c5a73]',
 };
 
 const DESCRIPCION_ESTADO: Record<EstadoButaca, string> = {
@@ -36,7 +45,15 @@ const DESCRIPCION_ESTADO: Record<EstadoButaca, string> = {
   ocupada: 'ocupada',
   especialDisponible: 'especial disponible',
   especialOcupada: 'especial ocupada',
+  discapacitadosDisponible: 'para discapacitados disponible',
+  discapacitadosOcupada: 'para discapacitados ocupada',
 };
+
+function obtenerEstadoButaca(butaca: Butaca, ocupada: boolean): EstadoButaca {
+  if (butaca.esDiscapacitados) return ocupada ? 'discapacitadosOcupada' : 'discapacitadosDisponible';
+  if (butaca.esEspecial) return ocupada ? 'especialOcupada' : 'especialDisponible';
+  return ocupada ? 'ocupada' : 'disponible';
+}
 
 @Component({
   selector: 'app-mapa-butacas',
@@ -55,8 +72,10 @@ export class MapaButacas {
     { estado: 'disponible', texto: 'Disponible' },
     { estado: 'seleccionada', texto: 'Seleccionada' },
     { estado: 'ocupada', texto: 'Ocupada' },
-    { estado: 'especialDisponible', texto: 'Especial disponible' },
+    { estado: 'especialDisponible', texto: 'Especial disponible (+15%)' },
     { estado: 'especialOcupada', texto: 'Especial ocupada' },
+    { estado: 'discapacitadosDisponible', texto: 'Para discapacitados disponible' },
+    { estado: 'discapacitadosOcupada', texto: 'Para discapacitados ocupada' },
   ];
 
   protected readonly limiteAlcanzado = computed(
@@ -82,15 +101,7 @@ export class MapaButacas {
           .map<ButacaMapa>((butaca) => {
             const seleccionada = seleccionadas.has(butaca.id);
             const ocupada = reservadas.has(butaca.id);
-            const estado: EstadoButaca = seleccionada
-              ? 'seleccionada'
-              : butaca.esEspecial
-                ? ocupada
-                  ? 'especialOcupada'
-                  : 'especialDisponible'
-                : ocupada
-                  ? 'ocupada'
-                  : 'disponible';
+            const estado = seleccionada ? 'seleccionada' : obtenerEstadoButaca(butaca, ocupada);
             return { id: butaca.id, estado, deshabilitada: ocupada || (limiteAlcanzado && !seleccionada) };
           });
 

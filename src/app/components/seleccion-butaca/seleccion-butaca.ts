@@ -1,4 +1,4 @@
-import { DecimalPipe } from '@angular/common';
+import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { Component, computed, DestroyRef, inject, input, resource, signal } from '@angular/core';
 import { email, form, FormField, FormRoot, validate } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
@@ -8,7 +8,7 @@ import { obtenerEdadMinima } from '../../classes/clasificacion';
 import { ArticuloService } from '../../services/articulo.service';
 import { AuthService } from '../../services/auth.service';
 import { FuncionService } from '../../services/funcion.service';
-import { OrdenService } from '../../services/orden.service';
+import { calcularPuntosOrden, calcularTotalOrden, OrdenService } from '../../services/orden.service';
 import { calcularEdad } from '../registro/validadores-registro';
 import { EstrellasCalificacion } from '../shared/estrellas-calificacion/estrellas-calificacion';
 import { CarrouselArticulos } from './carrousel-articulos/carrousel-articulos';
@@ -35,6 +35,7 @@ function pluralizar(cantidad: number, singular: string, plural: string): string 
     CarrouselArticulos,
     EstrellasCalificacion,
     DecimalPipe,
+    CurrencyPipe,
     ResenasPelicula,
   ],
   templateUrl: './seleccion-butaca.html',
@@ -94,7 +95,39 @@ export class SeleccionButaca {
     return !usuario || calcularEdad(usuario.fechaNacimiento) < edadMinima;
   });
 
-  protected readonly modelo = signal({ emailContacto: '', acompanado: false });
+  /** Puntos que cuestan las butacas y los artículos seleccionados. */
+  protected readonly puntosTotales = computed(() => {
+    const funcion = this.funcion.value();
+    if (!funcion) return 0;
+    return calcularPuntosOrden(funcion, this.butacasSeleccionadas().length, this.articulosSeleccionados());
+  });
+
+  /** `true` si el usuario registrado tiene puntos para cubrir la totalidad de la reserva. */
+  protected readonly puedePagarConPuntos = computed(() => {
+    const usuario = this.usuario();
+    return usuario !== null && this.butacasSeleccionadas().length > 0 && usuario.puntos >= this.puntosTotales();
+  });
+
+  /** Total en dinero de las butacas y los artículos seleccionados. */
+  protected readonly totalDinero = computed(() => {
+    const funcion = this.funcion.value();
+    if (!funcion) return 0;
+    return calcularTotalOrden(funcion, this.butacasSeleccionadas(), this.articulosSeleccionados());
+  });
+
+  /** `true` si el usuario registrado tiene saldo para cubrir la totalidad de la reserva. */
+  protected readonly puedePagarConSaldo = computed(() => {
+    const usuario = this.usuario();
+    return usuario !== null && this.butacasSeleccionadas().length > 0 && usuario.saldo >= this.totalDinero();
+  });
+
+  protected readonly modelo = signal({ emailContacto: '', acompanado: false, pagoConPuntos: false, pagoConSaldo: false });
+
+  /** `true` si la opción de puntos está tildada y el usuario puede cubrirla. */
+  protected readonly pagaConPuntos = computed(() => this.puedePagarConPuntos() && this.modelo().pagoConPuntos);
+
+  /** `true` si la opción de saldo está tildada y el usuario puede cubrirla. */
+  protected readonly pagaConSaldo = computed(() => this.puedePagarConSaldo() && this.modelo().pagoConSaldo);
 
   protected readonly formulario = form(
     this.modelo,
@@ -118,7 +151,10 @@ export class SeleccionButaca {
               articulos: this.articulosSeleccionados(),
               usuario: this.usuario(),
               emailContacto: this.usuario() ? null : this.modelo().emailContacto.trim(),
+              pagoConPuntos: this.pagaConPuntos(),
+              pagoConSaldo: this.pagaConSaldo(),
             });
+            await this.authService.actualizarUsuario();
             await this.router.navigate(['/checkout', orden.id]);
           } catch {
             this.errorReserva.set('No se pudo completar la reserva. Intentá nuevamente.');

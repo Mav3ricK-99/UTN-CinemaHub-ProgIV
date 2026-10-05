@@ -9,16 +9,18 @@ import { SelectorCategoriaArticulo } from '../../../../shared/selector-categoria
 import { SelectorDisponibilidad } from '../../../../shared/selector-disponibilidad/selector-disponibilidad';
 
 const PRECIO_MINIMO = 1;
+const PUNTOS_MINIMO = 1;
 
 interface ModeloArticulo {
   nombre: string;
   disponible: boolean;
   precio: number | null;
+  puntos: number | null;
   categoria: CategoriaArticulo | null;
 }
 
 function crearModeloVacio(): ModeloArticulo {
-  return { nombre: '', disponible: true, precio: null, categoria: null };
+  return { nombre: '', disponible: true, precio: null, puntos: null, categoria: null };
 }
 
 @Component({
@@ -46,6 +48,9 @@ export class FormularioArticulo {
       required(ruta.precio, { message: 'Ingresá el precio.' });
       min(ruta.precio, PRECIO_MINIMO, { message: `El precio debe ser de al menos ${PRECIO_MINIMO}.` });
 
+      required(ruta.puntos, { message: 'Ingresá los puntos.' });
+      min(ruta.puntos, PUNTOS_MINIMO, { message: `Los puntos deben ser al menos ${PUNTOS_MINIMO}.` });
+
       required(ruta.categoria, { message: 'Seleccioná la categoría.' });
     },
     {
@@ -54,13 +59,14 @@ export class FormularioArticulo {
         action: async () => {
           this.errorGeneral.set(null);
 
-          const { nombre, disponible, precio, categoria } = this.modelo();
-          if (precio === null || !categoria) return undefined;
+          const { nombre, disponible, precio, puntos, categoria } = this.modelo();
+          if (precio === null || puntos === null || !categoria) return undefined;
 
           try {
             const articulo = await this.articuloService.crearArticulo({
               nombre: nombre.trim(),
               precio,
+              puntos,
               categoria,
               disponible,
             });

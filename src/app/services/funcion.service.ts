@@ -13,6 +13,7 @@ export interface SolicitudCrearFuncion {
   fechaInicio: Date;
   fechaFin: Date;
   precio: number;
+  puntos: number;
 }
 
 export interface PeliculaMasVista {
@@ -27,6 +28,7 @@ export interface SolicitudCrearFuncionesRecurrentes {
   fechaDesde: string;
   fechaHasta: string;
   precio: number;
+  puntos: number;
 }
 
 export interface FuncionRecurrenteCreada {
@@ -56,10 +58,10 @@ function convertirFilaEnFuncionRecurrenteCreada(fila: FilaFuncionRecurrenteCread
 }
 
 /** Columnas de `funcion` con su película y su sala (sin butacas). Otros servicios lo anidan en sus consultas. */
-export const SELECT_FUNCION = `id, fecha_inicio, fecha_fin, precio, butacas_reservadas, pelicula(${SELECT_PELICULA}), sala(id, nombre)`;
+export const SELECT_FUNCION = `id, fecha_inicio, fecha_fin, precio, puntos, butacas_reservadas, pelicula(${SELECT_PELICULA}), sala(id, nombre)`;
 
 /** Igual que `SELECT_FUNCION`, pero con las butacas de la sala. */
-const SELECT_FUNCION_CON_BUTACAS = `id, fecha_inicio, fecha_fin, precio, butacas_reservadas, pelicula(${SELECT_PELICULA}), sala(id, nombre, butaca(identificador, es_especial))`;
+const SELECT_FUNCION_CON_BUTACAS = `id, fecha_inicio, fecha_fin, precio, puntos, butacas_reservadas, pelicula(${SELECT_PELICULA}), sala(id, nombre, butaca(identificador, es_especial, es_discapacitados))`;
 
 /** Fila de `funcion`. Las fechas son `timestamptz`: llegan como string ISO. */
 export interface FilaFuncion {
@@ -67,6 +69,7 @@ export interface FilaFuncion {
   fecha_inicio: string;
   fecha_fin: string;
   precio: number;
+  puntos: number;
   butacas_reservadas: string[];
   pelicula: FilaPelicula;
   sala: FilaSala;
@@ -80,6 +83,7 @@ export function convertirFilaEnFuncion(fila: FilaFuncion): Funcion {
     fechaInicio: new Date(fila.fecha_inicio),
     fechaFin: new Date(fila.fecha_fin),
     precio: fila.precio,
+    puntos: fila.puntos,
     butacasReservadas: fila.butacas_reservadas,
   };
 }
@@ -99,7 +103,7 @@ export class FuncionService {
    * Crea la función. La base de datos rechaza la inserción si no se respetan los
    * 30 minutos de intervalo con otra función de la misma sala.
    */
-  async crearFuncion({ pelicula, sala, fechaInicio, fechaFin, precio }: SolicitudCrearFuncion): Promise<Funcion> {
+  async crearFuncion({ pelicula, sala, fechaInicio, fechaFin, precio, puntos }: SolicitudCrearFuncion): Promise<Funcion> {
     const { data, error } = await this.supabase.cliente
       .from('funcion')
       .insert({
@@ -108,6 +112,7 @@ export class FuncionService {
         fecha_inicio: fechaInicio.toISOString(),
         fecha_fin: fechaFin.toISOString(),
         precio,
+        puntos,
       })
       .select(SELECT_FUNCION)
       .single<FilaFuncion>();
@@ -128,6 +133,7 @@ export class FuncionService {
     fechaDesde,
     fechaHasta,
     precio,
+    puntos,
   }: SolicitudCrearFuncionesRecurrentes): Promise<FuncionRecurrenteCreada[]> {
     const { data, error } = await this.supabase.cliente.rpc('crear_funciones_recurrentes', {
       p_pelicula_id: peliculaId,
@@ -136,6 +142,7 @@ export class FuncionService {
       p_fecha_desde: fechaDesde,
       p_fecha_hasta: fechaHasta,
       p_precio: precio,
+      p_puntos: puntos,
     });
 
     if (error) throw error;

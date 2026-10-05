@@ -7,14 +7,18 @@ import { SupabaseService } from './supabase.service';
 export interface FilaSala {
   id: string;
   nombre: string;
-  butaca?: { identificador: string; es_especial: boolean }[];
+  butaca?: { identificador: string; es_especial: boolean; es_discapacitados: boolean }[];
 }
 
 export function convertirFilaEnSala(fila: FilaSala): Sala {
   return {
     id: fila.id,
     nombre: fila.nombre,
-    butacas: (fila.butaca ?? []).map((butaca) => ({ id: butaca.identificador, esEspecial: butaca.es_especial })),
+    butacas: (fila.butaca ?? []).map((butaca) => ({
+      id: butaca.identificador,
+      esEspecial: butaca.es_especial,
+      esDiscapacitados: butaca.es_discapacitados,
+    })),
   };
 }
 

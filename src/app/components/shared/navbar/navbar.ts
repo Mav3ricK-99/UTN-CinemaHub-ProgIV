@@ -1,3 +1,4 @@
+import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { Component, computed, ElementRef, HostListener, inject, resource, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
@@ -14,7 +15,7 @@ const UMBRAL_SCROLL_PX = 10;
 
 @Component({
   selector: 'app-navbar',
-  imports: [RouterLink, FormField, Avatar, Menu],
+  imports: [RouterLink, FormField, Avatar, Menu, DecimalPipe, CurrencyPipe],
   templateUrl: './navbar.html',
 })
 export class Navbar {
@@ -25,7 +26,11 @@ export class Navbar {
   protected readonly usuario = this.authService.usuario;
 
   protected readonly itemsMenuUsuario = computed<MenuItem[]>(() => {
-    const items: MenuItem[] = [{ label: 'Mis películas', icon: 'pi pi-video', routerLink: '/mis-peliculas' }];
+    const items: MenuItem[] = [
+      { label: 'Reservas', icon: 'pi pi-ticket', routerLink: '/reservas' },
+      { label: 'Mis películas', icon: 'pi pi-video', routerLink: '/mis-peliculas' },
+      { label: 'Historial puntos', icon: 'pi pi-star', routerLink: '/historial-puntos' },
+    ];
 
     const rol = this.usuario()?.rol;
 

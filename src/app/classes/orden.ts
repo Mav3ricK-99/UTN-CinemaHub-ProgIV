@@ -12,6 +12,9 @@ export interface Orden {
   total: number;
   qrData: string;
   verificada: boolean;
+  pagoConPuntos: boolean;
+  /** Puntos cobrados en la orden. `null` si no se pagó con puntos. */
+  puntosUtilizados: number | null;
   fechaVerificacion: Date | null;
   fechaCreacion: Date;
 }

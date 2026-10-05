@@ -1,0 +1,29 @@
+<main class="min-h-screen bg-neutral-950 px-6 pb-16 pt-28 text-white sm:px-12 lg:px-20">
+  <h1 class="mb-10 text-3xl font-extrabold tracking-tight sm:text-4xl">Reservas</h1>
+
+  @if (usuario()) {
+    @if (reservas.isLoading()) {
+      <div class="flex flex-col gap-5">
+        @for (indice of [1, 2, 3]; track indice) {
+          <div class="h-40 animate-pulse rounded-2xl bg-neutral-900"></div>
+        }
+      </div>
+    } @else if (reservas.error()) {
+      <p class="py-24 text-center text-neutral-400">No se pudieron cargar tus reservas.</p>
+    } @else {
+      @let reservasProximas = reservas.value() ?? [];
+      @if (reservasProximas.length === 0) {
+        <div class="py-24 text-center text-neutral-400">
+          <p>No tenés reservas para funciones próximas.</p>
+          <a routerLink="/" class="mt-4 inline-block font-semibold text-red-500 hover:text-red-400">Ver cartelera</a>
+        </div>
+      } @else {
+        <div class="flex flex-col gap-5">
+          @for (reservaProxima of reservasProximas; track reservaProxima.orden.id) {
+            <app-tarjeta-reserva [ordenConReserva]="reservaProxima" (reservaAnulada)="reservas.reload()" />
+          }
+        </div>
+      }
+    }
+  }
+</main>

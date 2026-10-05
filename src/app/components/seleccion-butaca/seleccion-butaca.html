@@ -133,6 +133,31 @@
               </div>
             }
 
+            @if (puedePagarConPuntos() && !pagaConSaldo()) {
+              <div>
+                <label class="flex cursor-pointer items-center gap-2 text-sm font-semibold">
+                  <input type="checkbox" class="size-4 cursor-pointer accent-red-600" [formField]="formulario.pagoConPuntos" />
+                  Pagar con puntos
+                </label>
+                <p class="mt-1 text-xs text-neutral-400">
+                  Costo: {{ puntosTotales() | number }} puntos. Tenés {{ usuario()?.puntos | number }} puntos.
+                </p>
+              </div>
+            }
+
+            @if (puedePagarConSaldo() && !pagaConPuntos()) {
+              <div>
+                <label class="flex cursor-pointer items-center gap-2 text-sm font-semibold">
+                  <input type="checkbox" class="size-4 cursor-pointer accent-red-600" [formField]="formulario.pagoConSaldo" />
+                  Pagar con saldo
+                </label>
+                <p class="mt-1 text-xs text-neutral-400">
+                  Costo: {{ totalDinero() | currency: 'ARS' : 'symbol' : '1.0-0' }}. Tenés
+                  {{ usuario()?.saldo | currency: 'ARS' : 'symbol' : '1.0-0' }} de saldo.
+                </p>
+              </div>
+            }
+
             @if (errorReserva()) {
               <p class="rounded-lg bg-red-950/60 px-3 py-2 text-sm text-red-300" role="alert">{{ errorReserva() }}</p>
             }

@@ -39,20 +39,28 @@
               <li class="flex items-center justify-between gap-3">
                 <span>Entradas ({{ datos.reserva.butacas.join(', ') }})</span>
                 <span class="shrink-0 font-medium text-white">
-                  {{ datos.reserva.precioButacas | currency: 'ARS' : 'symbol' : '1.0-0' }}
+                  @if (datos.orden.pagoConPuntos) {
+                    {{ datos.reserva.funcion.puntos * datos.reserva.butacas.length | number }} pts
+                  } @else {
+                    {{ datos.reserva.precioButacas | currency: 'ARS' : 'symbol' : '1.0-0' }}
+                  }
                 </span>
               </li>
               @for (articulo of datos.reserva.articulos; track articulo.id) {
                 <li class="flex items-center justify-between gap-3">
                   <span>{{ articulo.nombre }}</span>
                   <span class="shrink-0 font-medium text-white">
-                    {{ articulo.precio | currency: 'ARS' : 'symbol' : '1.0-0' }}
+                    @if (datos.orden.pagoConPuntos) {
+                      {{ articulo.puntos | number }} pts
+                    } @else {
+                      {{ articulo.precio | currency: 'ARS' : 'symbol' : '1.0-0' }}
+                    }
                   </span>
                 </li>
               }
             </ul>
 
-            @if (datos.orden.descuentoAplicado > 0) {
+            @if (datos.orden.descuentoAplicado > 0 && !datos.orden.pagoConPuntos) {
               <div class="flex items-center justify-between gap-3 text-sm text-neutral-400">
                 <span>Descuento aplicado</span>
                 <span>-{{ datos.orden.descuentoAplicado | currency: 'ARS' : 'symbol' : '1.0-0' }}</span>
@@ -61,8 +69,16 @@
 
             <div class="flex items-center justify-between gap-3 border-t border-white/10 pt-3 text-base font-bold">
               <span>Total</span>
-              <span>{{ datos.orden.total | currency: 'ARS' : 'symbol' : '1.0-0' }}</span>
+              @if (datos.orden.pagoConPuntos) {
+                <span>{{ datos.orden.puntosUtilizados | number }} pts</span>
+              } @else {
+                <span>{{ datos.orden.total | currency: 'ARS' : 'symbol' : '1.0-0' }}</span>
+              }
             </div>
+
+            @if (datos.orden.pagoConPuntos) {
+              <p class="text-center text-xs font-semibold text-amber-400">Abonó en puntos del sistema</p>
+            }
           </div>
         </aside>
 

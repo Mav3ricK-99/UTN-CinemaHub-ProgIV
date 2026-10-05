@@ -30,7 +30,7 @@ interface FilaResena {
   pelicula: FilaPelicula;
 }
 
-const SELECT_RESENA = `id, puntaje, comentario, fecha_creacion, fecha_edicion, usuario(id, email, nombre, fecha_nacimiento, rol), pelicula(${SELECT_PELICULA})`;
+const SELECT_RESENA = `id, puntaje, comentario, fecha_creacion, fecha_edicion, usuario(id, email, nombre, fecha_nacimiento, rol, saldo, puntos), pelicula(${SELECT_PELICULA})`;
 
 function convertirFilaEnResena(fila: FilaResena): Resena {
   return {

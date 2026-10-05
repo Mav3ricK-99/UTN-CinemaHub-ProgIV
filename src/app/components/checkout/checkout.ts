@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { Component, inject, input, resource, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import * as QRCode from 'qrcode';
@@ -16,7 +16,7 @@ interface DatosCheckout {
 
 @Component({
   selector: 'app-checkout',
-  imports: [DatePipe, CurrencyPipe, RouterLink],
+  imports: [DatePipe, CurrencyPipe, DecimalPipe, RouterLink],
   templateUrl: './checkout.html',
 })
 export class Checkout {

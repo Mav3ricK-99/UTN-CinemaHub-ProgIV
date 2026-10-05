@@ -10,6 +10,8 @@ export interface FilaUsuario {
   nombre: string;
   fecha_nacimiento: string;
   rol: RolUsuario;
+  saldo: number;
+  puntos: number;
 }
 
 export function convertirFilaEnUsuario(fila: FilaUsuario): Usuario {
@@ -20,6 +22,8 @@ export function convertirFilaEnUsuario(fila: FilaUsuario): Usuario {
     nombre: fila.nombre,
     fechaNacimiento: new Date(anio, mes - 1, dia),
     rol: fila.rol,
+    saldo: fila.saldo,
+    puntos: fila.puntos,
   };
 }
 
@@ -31,7 +35,7 @@ export class UsuarioService {
   async obtenerUsuarioPorId(idUsuario: string): Promise<Usuario | null> {
     const { data, error } = await this.supabase.cliente
       .from('usuario')
-      .select('id, email, nombre, fecha_nacimiento, rol')
+      .select('id, email, nombre, fecha_nacimiento, rol, saldo, puntos')
       .eq('id', idUsuario)
       .maybeSingle<FilaUsuario>();
 

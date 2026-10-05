@@ -25,10 +25,21 @@ export const routes: Routes = [
         loadComponent: () => import('./components/checkout/checkout').then((modulo) => modulo.Checkout),
       },
       {
+        path: 'reservas',
+        canActivate: [soloRegistradoGuard],
+        loadComponent: () => import('./components/reservas/reservas').then((modulo) => modulo.Reservas),
+      },
+      {
         path: 'mis-peliculas',
         canActivate: [soloRegistradoGuard],
         loadComponent: () =>
           import('./components/mis-peliculas/mis-peliculas').then((modulo) => modulo.MisPeliculas),
+      },
+      {
+        path: 'historial-puntos',
+        canActivate: [soloRegistradoGuard],
+        loadComponent: () =>
+          import('./components/historial-puntos/historial-puntos').then((modulo) => modulo.HistorialPuntos),
       },
       {
         path: 'validar-entrada',
@@ -64,6 +75,13 @@ export const routes: Routes = [
         path: 'peliculas',
         loadComponent: () =>
           import('./components/backoffice/peliculas/peliculas').then((modulo) => modulo.Peliculas),
+      },
+      {
+        path: 'peliculas/nueva',
+        loadComponent: () =>
+          import('./components/backoffice/peliculas/nueva-pelicula/nueva-pelicula').then(
+            (modulo) => modulo.NuevaPelicula,
+          ),
       },
       {
         path: 'funciones',

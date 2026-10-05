@@ -28,11 +28,16 @@ function formatearPrecio(monto: number): string {
   return monto.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 }
 
+function formatearPuntos(puntos: number): string {
+  return `${puntos.toLocaleString('es-AR')} pts`;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TicketPdfService {
   /** Arma el PDF del ticket de una orden y dispara su descarga en el navegador. */
   async descargarTicket(orden: Orden, reserva: Reserva): Promise<void> {
     const { funcion, butacas, articulos, precioButacas } = reserva;
+    const { pagoConPuntos } = orden;
 
     const qrDataUrl = await QRCode.toDataURL(orden.qrData, { margin: 1, width: 400 });
 
@@ -96,17 +101,27 @@ export class TicketPdfService {
     documento.setTextColor(...COLOR_TEXTO);
     documento.text(`Entradas (${butacas.join(', ')})`, MARGEN_MM, y);
     documento.text(String(butacas.length), xCantidad, y, { align: 'right' });
-    documento.text(formatearPrecio(precioButacas), ANCHO_HOJA_MM - MARGEN_MM, y, { align: 'right' });
+    documento.text(
+      pagoConPuntos ? formatearPuntos(funcion.puntos * butacas.length) : formatearPrecio(precioButacas),
+      ANCHO_HOJA_MM - MARGEN_MM,
+      y,
+      { align: 'right' },
+    );
     y += 6;
 
     for (const articulo of articulos) {
       documento.text(articulo.nombre, MARGEN_MM, y);
       documento.text('1', xCantidad, y, { align: 'right' });
-      documento.text(formatearPrecio(articulo.precio), ANCHO_HOJA_MM - MARGEN_MM, y, { align: 'right' });
+      documento.text(
+        pagoConPuntos ? formatearPuntos(articulo.puntos) : formatearPrecio(articulo.precio),
+        ANCHO_HOJA_MM - MARGEN_MM,
+        y,
+        { align: 'right' },
+      );
       y += 6;
     }
 
-    if (orden.descuentoAplicado > 0) {
+    if (orden.descuentoAplicado > 0 && !pagoConPuntos) {
       documento.setTextColor(...COLOR_TEXTO_SECUNDARIO);
       documento.text('Descuento aplicado', MARGEN_MM, y);
       documento.text(`-${formatearPrecio(orden.descuentoAplicado)}`, ANCHO_HOJA_MM - MARGEN_MM, y, {
@@ -124,8 +139,20 @@ export class TicketPdfService {
     documento.setFontSize(13);
     documento.setTextColor(...COLOR_TEXTO);
     documento.text('Total', MARGEN_MM, y);
-    documento.text(formatearPrecio(orden.total), ANCHO_HOJA_MM - MARGEN_MM, y, { align: 'right' });
-    y += 14;
+    documento.text(
+      pagoConPuntos ? formatearPuntos(orden.puntosUtilizados ?? 0) : formatearPrecio(orden.total),
+      ANCHO_HOJA_MM - MARGEN_MM,
+      y,
+      { align: 'right' },
+    );
+    y += pagoConPuntos ? 7 : 14;
+
+    if (pagoConPuntos) {
+      documento.setFontSize(10);
+      documento.setTextColor(...COLOR_MARCA);
+      documento.text('Abonó en puntos del sistema', ANCHO_HOJA_MM - MARGEN_MM, y, { align: 'right' });
+      y += 10;
+    }
 
     const xQr = MARGEN_MM + (anchoUtil - TAMANO_QR_MM) / 2;
     documento.addImage(qrDataUrl, 'PNG', xQr, y, TAMANO_QR_MM, TAMANO_QR_MM);

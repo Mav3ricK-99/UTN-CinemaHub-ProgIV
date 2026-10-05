@@ -1,16 +1,88 @@
 <div class="flex flex-col gap-6">
-  <div>
-    <h1 class="text-2xl font-bold text-slate-800">Nueva película</h1>
-    <p class="text-sm text-slate-500">Completá los datos para agregarla a la cartelera.</p>
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">Películas</h1>
+      <p class="text-sm text-slate-500">Listado de películas cargadas con su próxima función.</p>
+    </div>
+    <a
+      routerLink="/backoffice/peliculas/nueva"
+      class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500"
+    >
+      Nueva película
+    </a>
   </div>
 
-  @if (mensajeExito()) {
-    <p class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700" role="status">
-      {{ mensajeExito() }}
-    </p>
-  }
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <p-table
+      [value]="peliculas.value() ?? []"
+      [loading]="peliculas.isLoading()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      sortMode="single"
+      sortField="pelicula.nombre"
+      [sortOrder]="1"
+      dataKey="pelicula.id"
+      styleClass="text-sm"
+    >
+      <ng-template #header>
+        <tr class="bg-slate-50 text-xs font-semibold uppercase text-slate-500">
+          <th pSortableColumn="pelicula.nombre" class="px-4 py-3">
+            Nombre
+            <p-sortIcon field="pelicula.nombre" />
+          </th>
+          <th pSortableColumn="pelicula.idioma" class="px-4 py-3">
+            Idioma
+            <p-sortIcon field="pelicula.idioma" />
+          </th>
+          <th class="px-4 py-3">Categorías</th>
+          <th pSortableColumn="pelicula.promedioResenas" class="px-4 py-3">
+            Reseñas
+            <p-sortIcon field="pelicula.promedioResenas" />
+          </th>
+          <th pSortableColumn="proximaFuncion.fechaInicio" class="px-4 py-3">
+            Próxima función
+            <p-sortIcon field="proximaFuncion.fechaInicio" />
+          </th>
+        </tr>
+      </ng-template>
 
-  @if (mostrarFormulario()) {
-    <app-formulario-pelicula (creada)="alCrearPelicula($event)" />
-  }
+      <ng-template #body let-fila>
+        <tr>
+          <td class="px-4 py-3 font-medium text-slate-800">{{ fila.pelicula.nombre }}</td>
+          <td class="px-4 py-3">
+            <p-tag [value]="fila.pelicula.idioma" severity="info" />
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex flex-wrap gap-1">
+              @for (categoria of fila.pelicula.categorias; track categoria.id) {
+                <p-tag [value]="categoria.nombre" severity="secondary" />
+              }
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2 text-slate-600">
+              <app-estrellas-calificacion [puntaje]="fila.pelicula.promedioResenas" />
+              <span class="text-xs">
+                {{ fila.pelicula.promedioResenas | number: '1.1-1' }} ({{ fila.pelicula.cantidadResenas }})
+              </span>
+            </div>
+          </td>
+          <td class="px-4 py-3 text-slate-600">
+            @if (fila.proximaFuncion) {
+              {{ fila.proximaFuncion.fechaInicio | date: 'EEE d MMM · HH:mm' : 'UTC' }}
+            } @else {
+              <span class="text-slate-400">Sin funciones programadas</span>
+            }
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="5" class="px-4 py-6 text-center text-slate-500">No hay películas cargadas.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
 </div>

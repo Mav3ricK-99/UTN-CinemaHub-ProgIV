@@ -3,6 +3,7 @@ import { FieldValidator, PathKind } from '@angular/forms/signals';
 import { PeriodoFuncion } from '../../../../shared/selector-periodo-funcion/selector-periodo-funcion';
 
 const PRECIO_MINIMO = 1000;
+const PUNTOS_MINIMO = 1;
 
 export function alMenosUnDia(): FieldValidator<number[], PathKind.Child> {
   return ({ value }) => {
@@ -40,5 +41,13 @@ export function precioValido(): FieldValidator<number | null, PathKind.Child> {
     const precio = value();
     if (precio !== null && precio > PRECIO_MINIMO) return null;
     return { kind: 'precioInvalido', message: `El precio debe ser mayor a $${PRECIO_MINIMO}.` };
+  };
+}
+
+export function puntosValidos(): FieldValidator<number | null, PathKind.Child> {
+  return ({ value }) => {
+    const puntos = value();
+    if (puntos !== null && Number.isInteger(puntos) && puntos >= PUNTOS_MINIMO) return null;
+    return { kind: 'puntosInvalidos', message: `Los puntos deben ser un entero de al menos ${PUNTOS_MINIMO}.` };
   };
 }

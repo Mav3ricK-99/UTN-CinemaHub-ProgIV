@@ -7,13 +7,14 @@ import { PeliculaService } from '../../../../../services/pelicula.service';
 import { SelectorDiasSemana } from '../../../../shared/selector-dias-semana/selector-dias-semana';
 import { SelectorPelicula } from '../../../../shared/selector-pelicula/selector-pelicula';
 import { PeriodoFuncion, SelectorPeriodoFuncion } from '../../../../shared/selector-periodo-funcion/selector-periodo-funcion';
-import { alMenosUnDia, periodoCompleto, precioValido } from './validadores-funcion';
+import { alMenosUnDia, periodoCompleto, precioValido, puntosValidos } from './validadores-funcion';
 
 interface ModeloFuncion {
   pelicula: Pelicula | null;
   diasSemana: number[];
   periodo: PeriodoFuncion;
   precio: number | null;
+  puntos: number | null;
 }
 
 function crearModeloVacio(): ModeloFuncion {
@@ -22,6 +23,7 @@ function crearModeloVacio(): ModeloFuncion {
     diasSemana: [],
     periodo: { fechaDesde: null, fechaHasta: null, horario: null },
     precio: null,
+    puntos: null,
   };
 }
 
@@ -55,6 +57,8 @@ export class FormularioFuncion {
       validate(ruta.periodo, periodoCompleto());
       required(ruta.precio, { message: 'Ingresá el precio.' });
       validate(ruta.precio, precioValido());
+      required(ruta.puntos, { message: 'Ingresá los puntos.' });
+      validate(ruta.puntos, puntosValidos());
     },
     {
       submission: {
@@ -62,8 +66,8 @@ export class FormularioFuncion {
         action: async () => {
           this.errorGeneral.set(null);
 
-          const { pelicula, diasSemana, periodo, precio } = this.modelo();
-          if (!pelicula || !periodo.fechaDesde || !periodo.fechaHasta || !periodo.horario || !precio) {
+          const { pelicula, diasSemana, periodo, precio, puntos } = this.modelo();
+          if (!pelicula || !periodo.fechaDesde || !periodo.fechaHasta || !periodo.horario || !precio || !puntos) {
             return undefined;
           }
 
@@ -75,6 +79,7 @@ export class FormularioFuncion {
               fechaDesde: formatearFecha(periodo.fechaDesde),
               fechaHasta: formatearFecha(periodo.fechaHasta),
               precio,
+              puntos,
             });
             this.creadas.emit(funcionesCreadas);
           } catch (error) {

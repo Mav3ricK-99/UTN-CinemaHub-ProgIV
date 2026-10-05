@@ -1,0 +1,59 @@
+<main class="min-h-screen bg-neutral-950 px-6 pb-16 pt-28 text-white sm:px-12 lg:px-20">
+  <div class="mb-10 flex flex-wrap items-end justify-between gap-3">
+    <h1 class="text-3xl font-extrabold tracking-tight sm:text-4xl">Historial de puntos</h1>
+    @if (usuario(); as usuarioActual) {
+      <p class="text-sm text-neutral-400">
+        Saldo actual: <span class="font-bold text-white">{{ usuarioActual.puntos | number }} puntos</span>
+      </p>
+    }
+  </div>
+
+  @if (movimientos.isLoading()) {
+    <div class="flex flex-col gap-4">
+      @for (indice of [1, 2, 3]; track indice) {
+        <div class="h-28 animate-pulse rounded-2xl bg-neutral-900"></div>
+      }
+    </div>
+  } @else if (movimientos.error()) {
+    <p class="py-24 text-center text-neutral-400">No se pudo cargar tu historial de puntos.</p>
+  } @else {
+    @let historial = movimientos.value() ?? [];
+    @if (historial.length === 0) {
+      <div class="py-24 text-center text-neutral-400">
+        <p>Todavía no tenés movimientos de puntos.</p>
+        <a routerLink="/" class="mt-4 inline-block font-semibold text-red-500 hover:text-red-400">Ver cartelera</a>
+      </div>
+    } @else {
+      <ul class="flex flex-col gap-4">
+        @for (movimiento of historial; track movimiento.ordenId + movimiento.tipo) {
+          <li class="flex items-center gap-4 rounded-2xl bg-white/5 p-4">
+            <img
+              class="h-20 w-32 shrink-0 rounded-xl object-cover"
+              [src]="movimiento.pelicula.imagenUrl"
+              [alt]="'Imagen de ' + movimiento.pelicula.nombre"
+              loading="lazy"
+            />
+            <div class="min-w-0 flex-1">
+              <h2 class="truncate text-lg font-bold">{{ movimiento.pelicula.nombre }}</h2>
+              <p class="text-sm text-neutral-400">
+                {{ movimiento.fechaCreacion | date: "d 'de' MMMM y · HH:mm 'hs'" }}
+              </p>
+            </div>
+            <div class="shrink-0 text-right">
+              <p
+                class="text-lg font-extrabold"
+                [class.text-green-400]="movimiento.tipo === 'ganancia'"
+                [class.text-red-400]="movimiento.tipo === 'canje'"
+              >
+                {{ movimiento.tipo === 'ganancia' ? '+' : '-' }}{{ movimiento.puntos | number }}
+              </p>
+              <p class="text-xs text-neutral-400">
+                {{ movimiento.tipo === 'ganancia' ? 'Puntos ganados' : 'Puntos canjeados' }}
+              </p>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  }
+</main>

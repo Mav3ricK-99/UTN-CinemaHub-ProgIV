@@ -60,11 +60,12 @@ Incluye:
 más 14 butacas accesibles en la fila J. La fila K se elimina — su espacio
 físico se fusiona con J para dar lugar a butacas accesibles más anchas. |
 
-#### Butaca (actualizado)
+#### Butaca
 | Campo | Tipo | Notas |
 |---|---|---|
 | id | string | `Letra fila` + `número columna` (ej: `A28`, `J10`) |
-| esEspecial | boolean | `true` solo para las 14 butacas de la fila `J` |
+| esEspecial | boolean | `true` solo para las filas `R`, `S` y `T` |
+| esDiscapacitados | boolean | `true` solo para las 14 butacas de la fila `J` |
 
 #### Funcion
 | Campo | Tipo | Notas |
@@ -75,6 +76,7 @@ físico se fusiona con J para dar lugar a butacas accesibles más anchas. |
 | fechaInicio | datetime | |
 | fechaFin | datetime | |
 | precio | number | Precio de la funcion |
+| puntos | number | puntos que una butaca en esa funcion |
 | butacasReservadas | string[] | identificadores de butacas (ej: `A28`) ya reservadas para esta función |
 
 **Regla de negocio crítica**: no puede crearse una función que comience antes
@@ -98,6 +100,8 @@ de carrera.
 | nombre | string | |
 | fechaNacimiento | date | |
 | rol | enum | `cliente` \| `empleado` \| `admin` |
+| saldo | number | (`integer`, default `0`, `>= 0`) — saldo actual de dinero (cache).
+| puntos | number | (`integer`, default `0`, `>= 0`) — saldo actual de puntos (cache).
 
 Datos de registro acotados a los tres campos de arriba (+ auth de Supabase
 para la contraseña/sesión).
@@ -112,6 +116,8 @@ para la contraseña/sesión).
 | total | number | suma de la reserva (butacas) + artículos |
 | qrData | string | único QR para toda la orden (entrada + candy) |
 | verificada | boolean | |
+| pagoConPuntos | boolean | si esta orden se pagó con puntos en vez de dinero.
+| puntosUtilizados | number | cuántos puntos se cobraron en esta orden. |
 | fechaVerificacion | datetime \| null | |
 | fechaCreacion | datetime | |
 
@@ -137,6 +143,7 @@ para la contraseña/sesión).
 | id | string | |
 | nombre | string | |
 | precio | number | |
+| puntos | number | puntos que vale ese articulo de candy |
 | categoria | CategoriaArticulo | relación muchos a uno *(distinta de la Categoria de Pelicula)* |
 | disponible | boolean | TBD si en algún momento se suma stock/inventario real |
 
@@ -168,6 +175,10 @@ para la contraseña/sesión).
    reseña de una película si tiene registrada al menos una Orden con una
    Reserva asociada a una Función de esa película.
 7. **El cine contará con 8 salas**: El cine dispondrá solamente de 8 salas fisicas.
+8. **Sistema de Fidelizacion**: 1 peso pagado en dinero = 1 punto ganado (floor(total)), y solo para usuarios registrados (orden.usuario_id no nulo). Un comprador anónimo (email_contacto) nunca gana puntos. El usuario registrado podrá canjear puntos por el monto total que debe abonar solo si alcanzan los puntos que tiene.
+9. **Historial de puntos**: no hay tabla de movimientos separada. Como todo movimiento pasa por orden, alcanza con la vista historial_puntos_usuario (usuario_id, orden_id, fecha_creacion, tipo 'ganancia'|'canje', puntos con signo: positivo si ganó, negativo si canjeó).
+10. **Butacas especiales**: las butacas con `esEspecial` (filas `R`, `S` y `T`) cuestan un 15% más que el `precio` de la función. Las butacas con `esDiscapacitados` (fila `J`) no tienen recargo. `Reserva.precioButacas` guarda la suma con el recargo incluido.
+11. **Cancelacion de reservas**: Se puede cancelar hasta 2 horas antes del comienzo de la función (exactamente 2 horas todavía vale). Pasado ese límite, o con la función ya empezada no se podrá cancelar. El monto se devuelve al usuario en saldo si pago con dinero o en puntos si abono con puntos del sistema.
 
 ### Pendientes de definición (TBD)
 - Estructura interna de `Sala` (filas, columnas, numeración de butacas).

@@ -139,6 +139,11 @@ export class AuthService {
     );
   }
 
+  /** Vuelve a leer el usuario con sesión iniciada, por ejemplo para actualizar su saldo de puntos. */
+  async actualizarUsuario(): Promise<void> {
+    await this.cargarUsuario(this.usuarioActual()?.id ?? null);
+  }
+
   private async cargarUsuario(idUsuario: string | null): Promise<void> {
     if (!idUsuario) {
       this.usuarioActual.set(null);

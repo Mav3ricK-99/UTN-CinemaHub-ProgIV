@@ -1,0 +1,88 @@
+@let orden = ordenConReserva().orden;
+@let reserva = ordenConReserva().reserva;
+
+<article class="flex flex-col gap-5 rounded-2xl bg-white/5 p-5 sm:flex-row">
+  <img
+    class="h-48 w-full shrink-0 rounded-xl object-cover sm:h-auto sm:w-40"
+    [src]="reserva.funcion.pelicula.imagenUrl"
+    [alt]="'Imagen de ' + reserva.funcion.pelicula.nombre"
+    loading="lazy"
+  />
+
+  <div class="flex min-w-0 flex-1 flex-col gap-3">
+    <div class="flex flex-col gap-1">
+      <h3 class="text-lg font-bold">{{ reserva.funcion.pelicula.nombre }}</h3>
+      <p class="line-clamp-2 text-sm text-neutral-400">{{ reserva.funcion.pelicula.sinopsis }}</p>
+    </div>
+
+    <ul class="flex flex-wrap gap-2 text-xs text-neutral-300">
+      <li class="rounded-full bg-white/10 px-3 py-1">
+        {{ reserva.butacas.length === 1 ? 'Butaca' : 'Butacas' }} {{ reserva.butacas.join(', ') }}
+      </li>
+      <li class="rounded-full bg-white/10 px-3 py-1">Sala {{ reserva.funcion.sala.nombre }}</li>
+      <li class="rounded-full bg-white/10 px-3 py-1">
+        {{ reserva.funcion.fechaInicio | date: "EEEE d 'de' MMMM · HH:mm 'hs'" : 'UTC' }}
+      </li>
+      <li class="rounded-full bg-white/10 px-3 py-1">
+        @if (orden.pagoConPuntos) {
+          {{ orden.puntosUtilizados | number }} pts
+        } @else {
+          {{ orden.total | currency: 'ARS' : 'symbol' : '1.0-0' }}
+        }
+      </li>
+    </ul>
+
+    @if (errorAnulacion()) {
+      <p class="rounded-lg bg-red-950/60 px-3 py-2 text-sm text-red-300" role="alert">{{ errorAnulacion() }}</p>
+    }
+
+    <div class="mt-auto flex flex-wrap items-center gap-3">
+      <a
+        [routerLink]="['/checkout', orden.id]"
+        class="rounded-full border border-white/30 px-5 py-1.5 text-sm font-semibold transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white"
+      >
+        Ver ticket
+      </a>
+
+      @if (confirmando()) {
+        <span class="text-sm text-neutral-300">
+          Se devolverá
+          @if (orden.pagoConPuntos) {
+            {{ orden.puntosUtilizados | number }} puntos.
+          } @else {
+            {{ orden.total | currency: 'ARS' : 'symbol' : '1.0-0' }} en saldo.
+          }
+          ¿Anular?
+        </span>
+        <button
+          type="button"
+          class="cursor-pointer rounded-full bg-red-600 px-5 py-1.5 text-sm font-bold transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-neutral-400"
+          [disabled]="anulando()"
+          (click)="anular()"
+        >
+          {{ anulando() ? 'Anulando...' : 'Sí, anular' }}
+        </button>
+        <button
+          type="button"
+          class="cursor-pointer rounded-full px-5 py-1.5 text-sm font-semibold transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:text-neutral-500"
+          [disabled]="anulando()"
+          (click)="cancelarConfirmacion()"
+        >
+          No
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="ml-auto cursor-pointer rounded-full bg-red-600 px-5 py-1.5 text-sm font-bold transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-neutral-400"
+          [disabled]="!dentroDelLimite()"
+          (click)="iniciarConfirmacion()"
+        >
+          Anular reserva
+        </button>
+        @if (!dentroDelLimite()) {
+          <p class="w-full text-xs text-neutral-400">Solo se puede anular hasta 2 horas antes de la función.</p>
+        }
+      }
+    </div>
+  </div>
+</article>

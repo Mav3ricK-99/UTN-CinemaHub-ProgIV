@@ -2,16 +2,16 @@ import { Component, computed, DestroyRef, inject, output, resource, signal } fro
 import { form, FormField, FormRoot, max, maxLength, min, required, validate } from '@angular/forms/signals';
 import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
 
-import { Categoria } from '../../../../classes/categoria';
-import { Clasificacion } from '../../../../classes/clasificacion';
-import { FormatoPelicula, IdiomaPelicula, Pelicula } from '../../../../classes/pelicula';
-import { CategoriaService } from '../../../../services/categoria.service';
-import { ClasificacionService } from '../../../../services/clasificacion.service';
-import { PeliculaService } from '../../../../services/pelicula.service';
-import { SelectorCategorias } from '../../../shared/selector-categorias/selector-categorias';
-import { SelectorClasificacion } from '../../../shared/selector-clasificacion/selector-clasificacion';
-import { SelectorFormato } from '../../../shared/selector-formato/selector-formato';
-import { SelectorIdioma } from '../../../shared/selector-idioma/selector-idioma';
+import { Categoria } from '../../../../../classes/categoria';
+import { Clasificacion } from '../../../../../classes/clasificacion';
+import { FormatoPelicula, IdiomaPelicula, Pelicula } from '../../../../../classes/pelicula';
+import { CategoriaService } from '../../../../../services/categoria.service';
+import { ClasificacionService } from '../../../../../services/clasificacion.service';
+import { PeliculaService } from '../../../../../services/pelicula.service';
+import { SelectorCategorias } from '../../../../shared/selector-categorias/selector-categorias';
+import { SelectorClasificacion } from '../../../../shared/selector-clasificacion/selector-clasificacion';
+import { SelectorFormato } from '../../../../shared/selector-formato/selector-formato';
+import { SelectorIdioma } from '../../../../shared/selector-idioma/selector-idioma';
 import { PrevisualizacionPelicula } from './previsualizacion-pelicula/previsualizacion-pelicula';
 import { alMenosUnaCategoria } from './validadores-pelicula';
 

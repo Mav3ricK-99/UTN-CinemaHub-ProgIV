@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 
-import { Pelicula } from '../../../../../classes/pelicula';
+import { Pelicula } from '../../../../../../classes/pelicula';
 
 @Component({
   selector: 'app-previsualizacion-pelicula',

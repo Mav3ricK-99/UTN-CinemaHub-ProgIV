@@ -7,6 +7,7 @@ import { SupabaseService } from './supabase.service';
 export interface SolicitudCrearArticulo {
   nombre: string;
   precio: number;
+  puntos: number;
   categoria: CategoriaArticulo;
   disponible: boolean;
 }
@@ -16,6 +17,7 @@ export interface FilaArticulo {
   id: string;
   nombre: string;
   precio: number;
+  puntos: number;
   disponible: boolean;
   categoria_articulo: CategoriaArticulo;
 }
@@ -25,6 +27,7 @@ export function convertirFilaEnArticulo(fila: FilaArticulo): Articulo {
     id: fila.id,
     nombre: fila.nombre,
     precio: fila.precio,
+    puntos: fila.puntos,
     categoria: fila.categoria_articulo,
     disponible: fila.disponible,
   };
@@ -35,11 +38,11 @@ export class ArticuloService {
   private readonly supabase = inject(SupabaseService);
 
   /** Crea el artículo y devuelve el registro guardado. */
-  async crearArticulo({ nombre, precio, categoria, disponible }: SolicitudCrearArticulo): Promise<Articulo> {
+  async crearArticulo({ nombre, precio, puntos, categoria, disponible }: SolicitudCrearArticulo): Promise<Articulo> {
     const { data, error } = await this.supabase.cliente
       .from('articulo')
-      .insert({ nombre, precio, categoria_id: categoria.id, disponible })
-      .select('id, nombre, precio, disponible, categoria_articulo(id, nombre)')
+      .insert({ nombre, precio, puntos, categoria_id: categoria.id, disponible })
+      .select('id, nombre, precio, puntos, disponible, categoria_articulo(id, nombre)')
       .single<FilaArticulo>();
 
     if (error) throw error;
@@ -53,11 +56,12 @@ export class ArticuloService {
       .update({
         nombre: articulo.nombre,
         precio: articulo.precio,
+        puntos: articulo.puntos,
         categoria_id: articulo.categoria.id,
         disponible: articulo.disponible,
       })
       .eq('id', articulo.id)
-      .select('id, nombre, precio, disponible, categoria_articulo(id, nombre)')
+      .select('id, nombre, precio, puntos, disponible, categoria_articulo(id, nombre)')
       .single<FilaArticulo>();
 
     if (error) throw error;
@@ -68,7 +72,7 @@ export class ArticuloService {
   async obtenerArticulos(): Promise<Articulo[]> {
     const { data, error } = await this.supabase.cliente
       .from('articulo')
-      .select('id, nombre, precio, disponible, categoria_articulo(id, nombre)')
+      .select('id, nombre, precio, puntos, disponible, categoria_articulo(id, nombre)')
       .order('nombre')
       .returns<FilaArticulo[]>();
 
@@ -80,7 +84,7 @@ export class ArticuloService {
   async obtenerArticulosDisponibles(): Promise<Articulo[]> {
     const { data, error } = await this.supabase.cliente
       .from('articulo')
-      .select('id, nombre, precio, disponible, categoria_articulo(id, nombre)')
+      .select('id, nombre, precio, puntos, disponible, categoria_articulo(id, nombre)')
       .eq('disponible', true)
       .order('nombre')
       .returns<FilaArticulo[]>();
