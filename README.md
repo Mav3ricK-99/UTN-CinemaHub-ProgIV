@@ -1,59 +1,52 @@
-# Cinemahub
+# CinemaHub
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.13.
+Aplicación web para la gestión y venta de entradas de un cine.
 
-## Development server
+## Objetivo
 
-To start a local development server, run:
+Permitir que los clientes consulten la cartelera, reserven butacas y compren candy desde la web, y que el personal del cine administre la programación y valide las entradas.
 
-```bash
-ng serve
-```
+## Funcionalidades
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- Cartelera y próximos estrenos, con reseñas de los usuarios.
+- Funciones por sala y reserva de butacas con disponibilidad en tiempo real.
+- Compra como usuario registrado o como invitado.
+- Candy (artículos) y combos (entrada + artículos).
+- Entrada con código QR y verificación en el cine.
+- Cancelación de reservas hasta 2 horas antes, con saldo a favor.
+- Programa de puntos: se ganan al comprar y se canjean por compras.
+- Roles de cliente, empleado y administrador.
+- Auditoría de los cambios sobre los datos principales.
 
-## Code scaffolding
+## Arquitectura
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+| Capa | Tecnología |
+|---|---|
+| Front end | Angular (última versión) |
+| Componentes de UI | PrimeNG |
+| Base de datos, autenticación y storage | Supabase (PostgreSQL) |
+| Despliegue | Vercel |
 
-```bash
-ng generate component component-name
-```
+### Supabase
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+La lógica de negocio vive en la base de datos, de modo que se cumple sin importar desde dónde se acceda. La seguridad se basa en RLS y en permisos por columna.
 
-```bash
-ng generate --help
-```
+**Funciones (RPC)**
+- `cancelar_orden(p_orden_id)`: cancela una compra dentro del plazo, libera las butacas, repone el saldo o los puntos y deja la orden marcada como verificada.
+- `crear_funciones_recurrentes(...)`: crea funciones periódicas asignando una sala libre en cada fecha.
+- `auth_rol()`: devuelve el rol del usuario; se usa en las policies de RLS.
 
-## Building
+**Triggers**
+- Validación de reserva: bloquea la función y rechaza butacas ya ocupadas, para evitar compras duplicadas.
+- Sincronización de `funcion.butacas_reservadas` al reservar o cancelar; es lo que se transmite en tiempo real al elegir butacas.
+- Puntos: al comprar se validan y descuentan los puntos canjeados, y se acreditan los ganados por el pago en dinero.
+- Auditoría (`registrar_auditoria`): registra quién creó, modificó, eliminó o validó un registro.
 
-To build the project run:
+**Otros**
+- Vista `historial_puntos_usuario`: movimientos de puntos por usuario, calculados desde las órdenes.
+- Storage: imágenes de las películas.
+- Realtime: cambios en `funcion` para mostrar las butacas ocupadas mientras el usuario elige.
 
-```bash
-ng build
-```
+## Despliegue
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+El front end se despliega en Vercel, conectado al repositorio. La base de datos, la autenticación y el storage corren en un proyecto de Supabase, y las migraciones del esquema están en `supabase/migrations`.
