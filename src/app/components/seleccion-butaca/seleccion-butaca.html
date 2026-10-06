@@ -81,7 +81,24 @@
             </div>
           }
 
-          @if (articulosSeleccionados().length > 0) {
+          @if (comboSeleccionado(); as combo) {
+            <div class="flex flex-col gap-2 rounded-xl border border-red-600/60 bg-red-950/30 p-4">
+              <p class="text-sm font-semibold">Combo: {{ combo.nombre }}</p>
+              <p class="text-xs text-neutral-300">
+                Elegí {{ combo.cantidadEntradas }} {{ combo.cantidadEntradas === 1 ? 'butaca' : 'butacas' }}
+                ({{ butacasSeleccionadas().length }}/{{ combo.cantidadEntradas }}). Precio del combo:
+                {{ combo.precio | currency: 'ARS' : 'symbol' : '1.0-0' }}.
+              </p>
+              <p class="text-sm font-semibold">Artículos del combo:</p>
+              <ul class="flex flex-wrap gap-2 text-xs">
+                @for (item of combo.articulos; track item.articulo.id) {
+                  <li class="rounded-full bg-red-600 px-3 py-1 font-semibold">
+                    {{ item.cantidad > 1 ? item.cantidad + ' x ' : '' }}{{ item.articulo.nombre }}
+                  </li>
+                }
+              </ul>
+            </div>
+          } @else if (articulosSeleccionados().length > 0) {
             <div class="flex flex-col gap-2">
               <p class="text-sm font-semibold">Artículos seleccionados:</p>
               <ul class="flex flex-wrap gap-2 text-xs">
@@ -90,6 +107,18 @@
                 }
               </ul>
             </div>
+          }
+
+          @if (porcentajeDescuento.value(); as porcentaje) {
+            @if (!pagaConPuntos() && !comboSeleccionado()) {
+              <p class="rounded-lg bg-emerald-950/60 px-3 py-2 text-sm text-emerald-300">
+                Descuento primera compra: {{ porcentaje }}%
+                @if (descuentoDinero() > 0) {
+                  (-{{ descuentoDinero() | currency: 'ARS' : 'symbol' : '1.0-0' }}). Total:
+                  {{ totalDinero() | currency: 'ARS' : 'symbol' : '1.0-0' }}.
+                }
+              </p>
+            }
           }
 
           <form [formRoot]="formulario" novalidate class="flex flex-col gap-3">
@@ -175,17 +204,38 @@
         <section class="min-w-0 flex-1" aria-label="Selección de butacas">
           <app-mapa-butacas
             [sala]="funcionActual.sala"
-            [butacasReservadas]="funcionActual.butacasReservadas"
+            [butacasReservadas]="butacasReservadas()"
+            [maximoButacas]="maximoButacas()"
             [(butacasSeleccionadas)]="butacasSeleccionadas"
           />
         </section>
       </div>
 
+      @if (combosDisponibles.value(); as combos) {
+        @if (combos.length > 0) {
+          <section class="mt-10 flex flex-col gap-4" aria-label="Combos">
+            <h2 class="text-xl font-bold text-white">Combos</h2>
+            <app-carrousel-combos
+              [combos]="combos"
+              [comboSeleccionado]="comboSeleccionado()"
+              (comboSeleccionadoChange)="alSeleccionarCombo($event)"
+            />
+          </section>
+        }
+      }
+
       @if (articulosCandy.value(); as articulos) {
         @if (articulos.length > 0) {
           <section class="mt-10 flex flex-col gap-4" aria-label="Artículos de candy">
             <h2 class="text-xl font-bold text-white">Llevate un snack</h2>
-            <app-carrousel-articulos [articulos]="articulos" [(articulosSeleccionados)]="articulosSeleccionados" />
+            @if (comboSeleccionado()) {
+              <p class="text-sm text-neutral-400">Los artículos del combo ya están incluidos. Quitá el combo para elegir snacks.</p>
+            }
+            <app-carrousel-articulos
+              [articulos]="articulos"
+              [deshabilitado]="comboSeleccionado() !== null"
+              [(articulosSeleccionados)]="articulosSeleccionados"
+            />
           </section>
         }
       }

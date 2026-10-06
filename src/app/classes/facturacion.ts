@@ -8,6 +8,8 @@ export interface Facturacion {
   pagoConPuntos: boolean;
   puntosUtilizados: number | null;
   total: number;
+  /** Monto descontado por la promoción de primera compra. 0 si no se aplicó descuento. */
+  descuentoAplicado: number;
   verificada: boolean;
   /** `null` si la orden no tiene reserva (fue cancelada). */
   precioButacas: number | null;

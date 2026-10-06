@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, output, resource, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, input, linkedSignal, output, resource, signal } from '@angular/core';
 import { form, FormField, FormRoot, max, maxLength, min, required, validate } from '@angular/forms/signals';
 import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
 
@@ -44,6 +44,19 @@ function crearModeloVacio(): ModeloPelicula {
   };
 }
 
+function crearModeloDesdePelicula(pelicula: Pelicula): ModeloPelicula {
+  return {
+    nombre: pelicula.nombre,
+    sinopsis: pelicula.sinopsis,
+    duracionMinutos: pelicula.duracionMinutos,
+    formato: pelicula.formato,
+    idioma: pelicula.idioma,
+    categorias: pelicula.categorias,
+    clasificacion: pelicula.clasificacion,
+    proximamente: pelicula.proximamente,
+  };
+}
+
 @Component({
   selector: 'app-formulario-pelicula',
   imports: [
@@ -64,9 +77,14 @@ export class FormularioPelicula {
   private readonly clasificacionService = inject(ClasificacionService);
   private readonly peliculaService = inject(PeliculaService);
 
-  readonly creada = output<Pelicula>();
+  /** Película a editar. Si es `null`, el formulario funciona como alta. */
+  readonly pelicula = input<Pelicula | null>(null);
+  readonly guardada = output<Pelicula>();
 
-  protected readonly modelo = signal(crearModeloVacio());
+  protected readonly modelo = linkedSignal<ModeloPelicula>(() => {
+    const pelicula = this.pelicula();
+    return pelicula ? crearModeloDesdePelicula(pelicula) : crearModeloVacio();
+  });
   protected readonly categoriasDisponibles = resource({ loader: () => this.categoriaService.obtenerCategorias() });
   protected readonly clasificacionesDisponibles = resource({
     loader: () => this.clasificacionService.obtenerClasificaciones(),
@@ -86,7 +104,7 @@ export class FormularioPelicula {
       nombre: nombre.trim() || 'Nombre de la película',
       sinopsis: sinopsis.trim() || 'La sinopsis aparecerá acá.',
       duracionMinutos: duracionMinutos ?? 0,
-      imagenUrl: this.imagenPreviewUrl() ?? '',
+      imagenUrl: this.imagenPreviewUrl() ?? this.pelicula()?.imagenUrl ?? '',
       formato: formato ?? '2D',
       idioma: idioma ?? 'Castellano',
       categorias,
@@ -127,8 +145,9 @@ export class FormularioPelicula {
         action: async () => {
           this.errorGeneral.set(null);
 
+          const peliculaEditada = this.pelicula();
           const imagen = this.imagenArchivo();
-          if (!imagen) {
+          if (!imagen && !peliculaEditada) {
             this.imagenTocada.set(true);
             return undefined;
           }
@@ -138,7 +157,7 @@ export class FormularioPelicula {
           if (!duracionMinutos || !formato || !idioma || !clasificacion) return undefined;
 
           try {
-            const pelicula = await this.peliculaService.crearPelicula({
+            const datos = {
               nombre: nombre.trim(),
               sinopsis: sinopsis.trim(),
               duracionMinutos,
@@ -147,9 +166,11 @@ export class FormularioPelicula {
               categorias,
               clasificacion,
               proximamente,
-              imagen,
-            });
-            this.creada.emit(pelicula);
+            };
+            const pelicula = peliculaEditada
+              ? await this.peliculaService.actualizarPelicula(peliculaEditada.id, { ...datos, imagen })
+              : await this.peliculaService.crearPelicula({ ...datos, imagen: imagen! });
+            this.guardada.emit(pelicula);
           } catch {
             this.errorGeneral.set('No se pudo guardar la película. Intentá nuevamente.');
           }

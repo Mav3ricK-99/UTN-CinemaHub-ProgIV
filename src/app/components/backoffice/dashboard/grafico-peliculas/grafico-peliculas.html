@@ -1,0 +1,37 @@
+<div class="flex flex-col gap-4">
+  <div class="flex items-center justify-between">
+    <h2 class="text-lg font-bold text-slate-800">Entradas vendidas por película</h2>
+    <p-selectbutton
+      [options]="opcionesPeriodo"
+      optionLabel="etiqueta"
+      optionValue="valor"
+      [allowEmpty]="false"
+      [ngModel]="periodo()"
+      (ngModelChange)="periodo.set($event)"
+    />
+  </div>
+
+  @if (series().length) {
+    <p-chart-svg [height]="360" [animation]="{ duration: 500 }">
+      @for (serie of series(); track serie.campo) {
+        <p-chart-line
+          [data]="filas()"
+          categoryXField="fecha"
+          [valueYField]="serie.campo"
+          [name]="serie.nombre"
+          [color]="serie.color"
+          [showMarkers]="true"
+        />
+      }
+      <p-chart-legend position="bottom" />
+      <p-chart-tooltip mode="shared" />
+      <p-chart-hover />
+      <p-chart-x-axis [label]="periodo() === 'semana' ? 'Fecha' : 'Mes'" />
+      <p-chart-y-axis label="Entradas" [tickFormat]="formatoEntero" />
+    </p-chart-svg>
+  } @else if (!entradasDiarias.isLoading()) {
+    <p class="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+      No hay entradas vendidas en el período seleccionado.
+    </p>
+  }
+</div>

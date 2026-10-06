@@ -19,9 +19,14 @@ export interface SolicitudCrearPelicula {
   imagen: File;
 }
 
+export interface SolicitudActualizarPelicula extends Omit<SolicitudCrearPelicula, 'imagen'> {
+  /** Imagen nueva. Si es `null`, se conserva la portada actual. */
+  imagen: File | null;
+}
+
 /** Columnas de `pelicula` con sus categorías. Otros servicios lo anidan en sus consultas. */
 export const SELECT_PELICULA =
-  'id, nombre, sinopsis, duracion_minutos, imagen_url, formato, idioma, promedio_resenas, cantidad_resenas, proximamente, clasificacion(codigo, descripcion), pelicula_categoria(categoria(id, nombre))';
+  'id, nombre, sinopsis, duracion_minutos, imagen_url, formato, idioma, promedio_resenas, cantidad_resenas, proximamente, clasificacion(id, codigo, descripcion), pelicula_categoria(categoria(id, nombre))';
 
 /** Fila de `pelicula` tal como la devuelve PostgREST con `SELECT_PELICULA`. */
 export interface FilaPelicula {
@@ -106,6 +111,74 @@ export class PeliculaService {
     });
   }
 
+  /** Devuelve la película con el id indicado, o `null` si no existe. */
+  async obtenerPeliculaPorId(idPelicula: string): Promise<Pelicula | null> {
+    const { data, error } = await this.supabase.cliente
+      .from('pelicula')
+      .select(SELECT_PELICULA)
+      .eq('id', idPelicula)
+      .maybeSingle<FilaPelicula>();
+    if (error) throw error;
+    return data ? convertirFilaEnPelicula(data) : null;
+  }
+
+  /** Actualiza la película, reemplaza su imagen si se eligió una nueva y rehace sus categorías. */
+  async actualizarPelicula(idPelicula: string, solicitud: SolicitudActualizarPelicula): Promise<Pelicula> {
+    const { data: anterior, error: errorAnterior } = await this.supabase.cliente
+      .from('pelicula')
+      .select('imagen_url')
+      .eq('id', idPelicula)
+      .single<{ imagen_url: string | null }>();
+    if (errorAnterior) throw errorAnterior;
+
+    const imagenUrl = solicitud.imagen ? await this.subirImagen(solicitud.imagen) : anterior.imagen_url;
+
+    const { data: fila, error } = await this.supabase.cliente
+      .from('pelicula')
+      .update({
+        nombre: solicitud.nombre,
+        sinopsis: solicitud.sinopsis,
+        duracion_minutos: solicitud.duracionMinutos,
+        imagen_url: imagenUrl,
+        formato: solicitud.formato,
+        idioma: solicitud.idioma,
+        clasificacion_id: solicitud.clasificacion.id,
+        proximamente: solicitud.proximamente,
+      })
+      .eq('id', idPelicula)
+      .select(SELECT_PELICULA)
+      .single<FilaPelicula>();
+    if (error) throw error;
+
+    const { error: errorBorrado } = await this.supabase.cliente
+      .from('pelicula_categoria')
+      .delete()
+      .eq('pelicula_id', idPelicula);
+    if (errorBorrado) throw errorBorrado;
+
+    if (solicitud.categorias.length > 0) {
+      const { error: errorRelacion } = await this.supabase.cliente
+        .from('pelicula_categoria')
+        .insert(solicitud.categorias.map((categoria) => ({ pelicula_id: idPelicula, categoria_id: categoria.id })));
+      if (errorRelacion) throw errorRelacion;
+    }
+
+    if (solicitud.imagen) await this.borrarImagen(anterior.imagen_url);
+
+    return convertirFilaEnPelicula({
+      ...fila,
+      pelicula_categoria: solicitud.categorias.map((categoria) => ({ categoria })),
+    });
+  }
+
+  /** Borra del bucket la imagen que corresponde a la URL pública indicada. */
+  private async borrarImagen(imagenUrl: string | null | undefined): Promise<void> {
+    const rutaImagen = imagenUrl?.split(`/${BUCKET_IMAGENES_PELICULA}/`)[1];
+    if (rutaImagen) {
+      await this.supabase.cliente.storage.from(BUCKET_IMAGENES_PELICULA).remove([rutaImagen]);
+    }
+  }
+
   /** Elimina la película (y sus vínculos con categorías) y borra su imagen del bucket. */
   async eliminarPelicula(idPelicula: string): Promise<void> {
     const { data, error } = await this.supabase.cliente
@@ -116,10 +189,7 @@ export class PeliculaService {
       .maybeSingle<{ imagen_url: string | null }>();
     if (error) throw error;
 
-    const rutaImagen = data?.imagen_url?.split(`/${BUCKET_IMAGENES_PELICULA}/`)[1];
-    if (rutaImagen) {
-      await this.supabase.cliente.storage.from(BUCKET_IMAGENES_PELICULA).remove([rutaImagen]);
-    }
+    await this.borrarImagen(data?.imagen_url);
   }
 
   /** Devuelve las películas marcadas como estreno próximo, ordenadas por nombre. */
@@ -134,16 +204,13 @@ export class PeliculaService {
     return data.map(convertirFilaEnPelicula);
   }
 
-  /** Devuelve las películas ordenadas por nombre. Con `termino`, solo las que lo contienen en el nombre. */
-  async obtenerPeliculas(termino?: string): Promise<Pelicula[]> {
-    let consulta = this.supabase.cliente.from('pelicula').select(SELECT_PELICULA);
-
-    const terminoLimpio = termino?.trim();
-    if (terminoLimpio) {
-      consulta = consulta.ilike('nombre', `%${terminoLimpio.replace(/[%_\\]/g, '\\$&')}%`);
-    }
-
-    const { data, error } = await consulta.order('nombre').returns<FilaPelicula[]>();
+  /** Devuelve las películas ordenadas por nombre. */
+  async obtenerPeliculas(): Promise<Pelicula[]> {
+    const { data, error } = await this.supabase.cliente
+      .from('pelicula')
+      .select(SELECT_PELICULA)
+      .order('nombre')
+      .returns<FilaPelicula[]>();
     if (error) throw error;
     return data.map(convertirFilaEnPelicula);
   }

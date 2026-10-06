@@ -35,14 +35,22 @@
 
           <div class="flex flex-col gap-3 rounded-2xl bg-white/5 p-4">
             <p class="text-sm font-semibold">Recibo</p>
+            @if (datos.orden.combo; as combo) {
+              <p class="flex items-center gap-2 rounded-lg bg-red-950/40 px-3 py-2 text-sm font-semibold text-red-300">
+                <i class="pi pi-gift" aria-hidden="true"></i>
+                Combo: {{ combo.nombre }}
+              </p>
+            }
             <ul class="flex flex-col gap-2 text-sm text-neutral-300">
               <li class="flex items-center justify-between gap-3">
                 <span>Entradas ({{ datos.reserva.butacas.join(', ') }})</span>
                 <span class="shrink-0 font-medium text-white">
                   @if (datos.orden.pagoConPuntos) {
                     {{ datos.reserva.funcion.puntos * datos.reserva.butacas.length | number }} pts
+                  } @else if (datos.orden.combo) {
+                    Incluido
                   } @else {
-                    {{ datos.reserva.precioButacas | currency: 'ARS' : 'symbol' : '1.0-0' }}
+                    {{ calcularPrecioButacas(datos.reserva.funcion, datos.reserva.butacas) | currency: 'ARS' : 'symbol' : '1.0-0' }}
                   }
                 </span>
               </li>
@@ -52,6 +60,8 @@
                   <span class="shrink-0 font-medium text-white">
                     @if (datos.orden.pagoConPuntos) {
                       {{ articulo.puntos | number }} pts
+                    } @else if (datos.orden.combo) {
+                      Incluido
                     } @else {
                       {{ articulo.precio | currency: 'ARS' : 'symbol' : '1.0-0' }}
                     }
@@ -62,7 +72,7 @@
 
             @if (datos.orden.descuentoAplicado > 0 && !datos.orden.pagoConPuntos) {
               <div class="flex items-center justify-between gap-3 text-sm text-neutral-400">
-                <span>Descuento aplicado</span>
+                <span>Descuento primera compra</span>
                 <span>-{{ datos.orden.descuentoAplicado | currency: 'ARS' : 'symbol' : '1.0-0' }}</span>
               </div>
             }

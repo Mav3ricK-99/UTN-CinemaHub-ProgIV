@@ -1,0 +1,67 @@
+<div class="flex flex-col gap-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Auditorías</h1>
+    <p class="text-sm text-slate-500">Cambios registrados en el sistema, del más reciente al más antiguo.</p>
+  </div>
+
+  @if (auditorias.error()) {
+    <p class="text-xs text-red-600">No se pudieron cargar las auditorías.</p>
+  }
+
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <p-table
+      [value]="auditorias.value() ?? []"
+      [loading]="auditorias.isLoading()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      sortMode="single"
+      sortField="fecha"
+      [sortOrder]="-1"
+      dataKey="id"
+      styleClass="text-sm"
+    >
+      <ng-template #header>
+        <tr class="bg-slate-50 text-xs font-semibold uppercase text-slate-500">
+          <th class="px-4 py-3">ID</th>
+          <th pSortableColumn="modelo" class="px-4 py-3">
+            Modelo
+            <p-sortIcon field="modelo" />
+          </th>
+          <th class="px-4 py-3">ID del modelo</th>
+          <th pSortableColumn="accion" class="px-4 py-3">
+            Acción
+            <p-sortIcon field="accion" />
+          </th>
+          <th class="px-4 py-3">ID de usuario</th>
+          <th pSortableColumn="usuarioNombre" class="px-4 py-3">
+            Usuario
+            <p-sortIcon field="usuarioNombre" />
+          </th>
+          <th pSortableColumn="fecha" class="px-4 py-3">
+            Fecha
+            <p-sortIcon field="fecha" />
+          </th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-auditoria>
+        <tr>
+          <td class="px-4 py-3 font-mono text-xs text-slate-600">{{ auditoria.id }}</td>
+          <td class="px-4 py-3 text-slate-800">{{ auditoria.modelo }}</td>
+          <td class="px-4 py-3 font-mono text-xs text-slate-600">{{ auditoria.modeloId }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ auditoria.accion }}</td>
+          <td class="px-4 py-3 font-mono text-xs text-slate-600">{{ auditoria.usuarioId ?? '-' }}</td>
+          <td class="px-4 py-3 text-slate-800">{{ auditoria.usuarioNombre ?? '-' }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ auditoria.fecha | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="7" class="px-4 py-6 text-center text-slate-500">No hay auditorías registradas.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

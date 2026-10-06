@@ -1,0 +1,25 @@
+<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6" role="list" aria-label="Combos">
+  @for (combo of combos(); track combo.id) {
+    <button
+      type="button"
+      role="listitem"
+      class="flex flex-col items-center gap-2 rounded-2xl border-2 p-3 text-center transition"
+      [class.border-red-600]="estaSeleccionado(combo)"
+      [class.bg-red-950/30]="estaSeleccionado(combo)"
+      [class.border-transparent]="!estaSeleccionado(combo)"
+      [class.bg-white/5]="!estaSeleccionado(combo)"
+      [attr.aria-pressed]="estaSeleccionado(combo)"
+      (click)="alternarCombo(combo)"
+    >
+      <span class="flex aspect-square w-full items-center justify-center rounded-xl bg-white/10 text-4xl text-red-500">
+        <i class="pi pi-gift" aria-hidden="true"></i>
+      </span>
+      <p class="text-sm font-semibold leading-tight text-white">{{ combo.nombre }}</p>
+      <p class="text-xs text-neutral-400">
+        {{ combo.cantidadEntradas }} {{ combo.cantidadEntradas === 1 ? 'butaca' : 'butacas' }} +
+        {{ combo.cantidadArticulos }} {{ combo.cantidadArticulos === 1 ? 'artículo' : 'artículos' }}
+      </p>
+      <p class="text-sm text-neutral-400">{{ combo.precio | currency: 'ARS' : 'symbol' : '1.0-0' }}</p>
+    </button>
+  }
+</div>

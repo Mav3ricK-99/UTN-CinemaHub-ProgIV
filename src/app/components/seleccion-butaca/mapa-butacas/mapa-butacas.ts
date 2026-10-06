@@ -64,8 +64,8 @@ export class MapaButacas {
   readonly sala = input.required<Sala>();
   readonly butacasReservadas = input.required<string[]>();
   readonly butacasSeleccionadas = model<string[]>([]);
-
-  protected readonly maximoButacas = MAXIMO_BUTACAS_SELECCIONADAS;
+  /** Cantidad máxima de butacas seleccionables. Con un combo, es la cantidad de entradas del combo. */
+  readonly maximoButacas = input(MAXIMO_BUTACAS_SELECCIONADAS);
   protected readonly claseColorEstado = CLASE_COLOR_ESTADO;
 
   protected readonly leyenda: { estado: EstadoButaca; texto: string }[] = [
@@ -79,7 +79,7 @@ export class MapaButacas {
   ];
 
   protected readonly limiteAlcanzado = computed(
-    () => this.butacasSeleccionadas().length >= MAXIMO_BUTACAS_SELECCIONADAS,
+    () => this.butacasSeleccionadas().length >= this.maximoButacas(),
   );
 
   protected readonly filas = computed<FilaMapa[]>(() => {
@@ -124,7 +124,7 @@ export class MapaButacas {
       if (seleccionadas.includes(idButaca)) {
         return seleccionadas.filter((id) => id !== idButaca);
       }
-      if (seleccionadas.length >= MAXIMO_BUTACAS_SELECCIONADAS) return seleccionadas;
+      if (seleccionadas.length >= this.maximoButacas()) return seleccionadas;
       return [...seleccionadas, idButaca];
     });
   }

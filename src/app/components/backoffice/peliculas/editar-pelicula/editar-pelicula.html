@@ -1,0 +1,23 @@
+<div class="flex flex-col gap-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">Editar película</h1>
+      <p class="text-sm text-slate-500">Modificá los datos y guardá los cambios.</p>
+    </div>
+    <a routerLink="/backoffice/peliculas" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+      Volver al listado
+    </a>
+  </div>
+
+  @if (pelicula.isLoading()) {
+    <p class="text-sm text-slate-500">Cargando película...</p>
+  } @else if (pelicula.error()) {
+    <p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+      No se pudo cargar la película. Intentá nuevamente.
+    </p>
+  } @else if (pelicula.value(); as peliculaCargada) {
+    <app-formulario-pelicula [pelicula]="peliculaCargada" (guardada)="alGuardarPelicula($event)" />
+  } @else {
+    <p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">La película no existe.</p>
+  }
+</div>

@@ -1,0 +1,29 @@
+<p-multiselect
+  [options]="opciones()"
+  optionLabel="nombre"
+  dataKey="id"
+  display="chip"
+  [filter]="true"
+  filterBy="nombre,categoria.nombre"
+  placeholder="Seleccioná los artículos"
+  appendTo="body"
+  [fluid]="true"
+  [disabled]="disabled()"
+  [ngModel]="value()"
+  (ngModelChange)="value.set($event)"
+  (onBlur)="touched.set(true)"
+>
+  <ng-template #item let-articulo>
+    <div class="flex items-start gap-3 py-1">
+      <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+        <i class="pi pi-shopping-bag"></i>
+      </span>
+      <div class="flex min-w-0 flex-col">
+        <span class="truncate font-medium text-slate-800">{{ articulo.nombre }}</span>
+        <span class="text-xs text-slate-500">
+          {{ articulo.categoria.nombre }} · {{ articulo.precio | currency: 'ARS' : 'symbol' : '1.0-0' }}
+        </span>
+      </div>
+    </div>
+  </ng-template>
+</p-multiselect>

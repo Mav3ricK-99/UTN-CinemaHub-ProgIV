@@ -12,9 +12,9 @@
     <div class="relative order-last w-full sm:order-none sm:ml-6 sm:w-auto sm:max-w-md sm:flex-1">
       <input
         type="search"
-        placeholder="Buscar película"
+        placeholder="Buscar película o categoría"
         autocomplete="off"
-        aria-label="Buscar película por nombre"
+        aria-label="Buscar película por nombre o categoría"
         class="w-full rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm placeholder:text-neutral-400 focus:border-white/50 focus:outline-none"
         [formField]="busqueda.termino"
         (focus)="abrirResultados()"
@@ -38,12 +38,13 @@
               <p class="px-3 py-4 text-sm text-neutral-400">Sin resultados para "{{ busqueda.termino().value().trim() }}".</p>
             } @else {
               <ul>
-                @for (pelicula of peliculas; track pelicula.nombre) {
+                @for (resultado of peliculas; track resultado.pelicula.id) {
+                  @let pelicula = resultado.pelicula;
                   <li>
                     <button
                       type="button"
-                      class="flex w-full items-center gap-3 rounded-lg p-2 text-left transition hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
-                      (click)="limpiarBusqueda()"
+                      class="flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 text-left transition hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+                      (click)="irAFuncionProxima(resultado.funcionProxima.id)"
                     >
                       <img
                         class="h-14 w-24 shrink-0 rounded object-cover"
@@ -55,6 +56,9 @@
                         <span class="block truncate font-semibold">{{ pelicula.nombre }}</span>
                         <span class="block truncate text-xs text-neutral-400">
                           {{ pelicula.formato }} · {{ pelicula.idioma }} · {{ pelicula.duracionMinutos }} min
+                        </span>
+                        <span class="block truncate text-xs text-neutral-500">
+                          Próxima función: {{ resultado.funcionProxima.fechaInicio | date: 'EEE d MMM, HH:mm' : 'UTC' }}
                         </span>
                       </span>
                     </button>

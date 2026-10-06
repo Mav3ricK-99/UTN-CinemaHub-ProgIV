@@ -85,6 +85,10 @@
             Puntos utilizados
             <p-sortIcon field="puntosUtilizados" />
           </th>
+          <th pSortableColumn="descuentoAplicado" class="px-4 py-3">
+            Descuento primera compra
+            <p-sortIcon field="descuentoAplicado" />
+          </th>
           <th pSortableColumn="total" class="px-4 py-3">
             Total
             <p-sortIcon field="total" />
@@ -116,6 +120,9 @@
           <td class="px-4 py-3 text-slate-600">{{ facturacion.email }}</td>
           <td class="px-4 py-3 text-slate-600">{{ facturacion.pagoConPuntos ? 'Sí' : 'No' }}</td>
           <td class="px-4 py-3 text-slate-600">{{ facturacion.puntosUtilizados ?? '-' }}</td>
+          <td class="px-4 py-3 text-slate-600">
+            {{ facturacion.descuentoAplicado > 0 ? (facturacion.descuentoAplicado | currency: 'ARS' : 'symbol-narrow' : '1.0-0') : 'No' }}
+          </td>
           <td class="px-4 py-3 text-slate-600">{{ facturacion.total | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</td>
           <td class="px-4 py-3 text-slate-600">{{ facturacion.verificada ? 'Sí' : 'No' }}</td>
           <td class="px-4 py-3 text-slate-600">
@@ -130,7 +137,7 @@
 
       <ng-template #emptymessage>
         <tr>
-          <td colspan="11" class="px-4 py-6 text-center text-slate-500">No hay facturaciones para los filtros elegidos.</td>
+          <td colspan="12" class="px-4 py-6 text-center text-slate-500">No hay facturaciones para los filtros elegidos.</td>
         </tr>
       </ng-template>
     </p-table>

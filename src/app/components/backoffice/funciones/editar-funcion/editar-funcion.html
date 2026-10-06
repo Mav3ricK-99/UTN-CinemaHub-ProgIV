@@ -1,0 +1,23 @@
+<div class="flex flex-col gap-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">Editar función</h1>
+      <p class="text-sm text-slate-500">Modificá los datos y guardá los cambios. La sala no cambia.</p>
+    </div>
+    <a routerLink="/backoffice/funciones" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+      Volver al listado
+    </a>
+  </div>
+
+  @if (funcion.isLoading()) {
+    <p class="text-sm text-slate-500">Cargando función...</p>
+  } @else if (funcion.error()) {
+    <p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+      No se pudo cargar la función. Intentá nuevamente.
+    </p>
+  } @else if (funcion.value(); as funcionCargada) {
+    <app-formulario-funcion [funcion]="funcionCargada" (guardada)="alGuardarFuncion($event)" />
+  } @else {
+    <p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">La función no existe.</p>
+  }
+</div>

@@ -122,6 +122,7 @@ para la contraseña/sesión).
 | pagoConPuntos | boolean | si esta orden se pagó con puntos en vez de dinero.
 | puntosUtilizados | number | cuántos puntos se cobraron en esta orden. |
 | fechaVerificacion | datetime \| null | |
+| combo | Combo \| null | combo comprado en la orden; máximo uno; un combo ya vendido no se puede borrar |
 | fechaCreacion | datetime | |
 
 #### Reserva
@@ -160,6 +161,34 @@ para la contraseña/sesión).
 | comentario | string | límite sugerido: 280 caracteres |
 | fechaCreacion | datetime | |
 | fechaEdicion | datetime \| null | se actualiza si el usuario edita su reseña |
+
+#### Auditoria
+| Campo | Tipo | Notas |
+|---|---|---|
+| id | string | |
+| modelo | string | tabla afectada: `reserva`, `orden`, `pelicula`, `funcion`, `articulo`, `resena` o `configuracion` |
+| modeloId | string | id del registro afectado; es texto porque `configuracion.id` es boolean y `reserva` se identifica por `orden_id` |
+| accion | `Validacion` \| `Creacion` \| `Modificacion` \| `Eliminacion` | `Validacion` es solo la verificación del QR de una orden; cancelar con `cancelar_orden` queda como `Modificacion` de la orden + `Eliminacion` de su reserva |
+| usuario | Usuario \| null | quién hizo el cambio (`auth.uid()`); null si vino sin sesión (SQL Editor, service_role) o si el usuario se borró después |
+| fecha | datetime | |
+
+#### Combo
+| Campo | Tipo | Notas |
+|---|---|---|
+| id | string | |
+| nombre | string | único |
+| descripcion | string \| null | |
+| precio | number | precio del combo completo en pesos (no es un descuento); >= 0 |
+| cantidadEntradas | number | entero > 0, por defecto 1; la función se elige al comprar |
+| disponible | boolean | por defecto true; permite apagar el combo sin borrarlo |
+| createdAt | datetime | |
+
+#### ComboArticulo
+| Campo | Tipo | Notas |
+|---|---|---|
+| combo | Combo | al borrar el combo se borran sus filas |
+| articulo | Articulo | no se puede borrar un artículo que esté en un combo |
+| cantidad | number | entero > 0, por defecto 1 |
 
 ### Reglas de negocio
 

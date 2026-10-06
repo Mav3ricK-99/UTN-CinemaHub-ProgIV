@@ -1,12 +1,14 @@
 import { inject, Injectable } from '@angular/core';
 
 import { Articulo } from '../classes/articulo';
+import { ArticuloCombo, ComboDetalle, repartirPrecioCombo } from '../classes/combo';
 import { Facturacion } from '../classes/facturacion';
 import { calcularPrecioButacas, Funcion } from '../classes/funcion';
-import { generarCodigoOrden, Orden } from '../classes/orden';
+import { ComboOrden, generarCodigoOrden, Orden } from '../classes/orden';
 import { Reserva } from '../classes/reserva';
 import { Usuario } from '../classes/usuario';
 import { convertirFilaEnArticulo, FilaArticulo } from './articulo.service';
+import { ConfiguracionService } from './configuracion.service';
 import { convertirFilaEnFuncion, FilaFuncion, SELECT_FUNCION } from './funcion.service';
 import { SupabaseService } from './supabase.service';
 import { convertirFilaEnUsuario, FilaUsuario } from './usuario.service';
@@ -15,6 +17,8 @@ export interface SolicitudCrearOrden {
   funcion: Funcion;
   butacas: string[];
   articulos: Articulo[];
+  /** Con combo, `articulos` se ignora: los artículos y los precios salen del combo. */
+  combo: ComboDetalle | null;
   usuario: Usuario | null;
   emailContacto: string | null;
   pagoConPuntos: boolean;
@@ -38,6 +42,15 @@ export interface FiltroFacturaciones {
   verificada: boolean | null;
 }
 
+export interface PreciosOrden {
+  precioButacas: number;
+  precioArticulos: number;
+  /** Suma de `precioButacas` y `precioArticulos`, ya con el descuento aplicado. */
+  total: number;
+  /** Monto descontado respecto del total sin descuento. 0 si no hay descuento. */
+  descuentoAplicado: number;
+}
+
 interface FilaReservaFacturacion {
   funcion_id: string;
   precio_butacas: number;
@@ -48,6 +61,7 @@ interface FilaFacturacion {
   id: string;
   email_contacto: string | null;
   total: number;
+  descuento_aplicado: number;
   verificada: boolean;
   pago_con_puntos: boolean;
   puntos_utilizados: number | null;
@@ -78,11 +92,12 @@ interface FilaOrden {
   fecha_verificacion: string | null;
   fecha_creacion: string;
   usuario: FilaUsuario | null;
+  combo: { id: string; nombre: string; precio: number; cantidad_entradas: number } | null;
   /** PostgREST devuelve un objeto si la relación es 1 a 1, o una lista si la detecta como 1 a N. */
   reserva: FilaReserva | FilaReserva[];
 }
 
-const SELECT_ORDEN = `id, email_contacto, descuento_aplicado, total, qr_data, verificada, pago_con_puntos, puntos_utilizados, fecha_verificacion, fecha_creacion, usuario(id, email, nombre, fecha_nacimiento, rol, saldo, puntos), reserva(id, butacas, precio_butacas, precio_articulos, funcion(${SELECT_FUNCION}), reserva_articulo(articulo(id, nombre, precio, puntos, disponible, categoria_articulo(id, nombre))))`;
+const SELECT_ORDEN = `id, email_contacto, descuento_aplicado, total, qr_data, verificada, pago_con_puntos, puntos_utilizados, fecha_verificacion, fecha_creacion, usuario(id, email, nombre, fecha_nacimiento, rol, saldo, puntos), combo(id, nombre, precio, cantidad_entradas), reserva(id, butacas, precio_butacas, precio_articulos, funcion(${SELECT_FUNCION}), reserva_articulo(articulo(id, nombre, precio, puntos, disponible, categoria_articulo(id, nombre))))`;
 
 /** Devuelve `null` si la orden no tiene reserva: al anular una reserva se elimina y la orden queda verificada. */
 function convertirFilaEnOrdenConReserva(fila: FilaOrden): OrdenConReserva | null {
@@ -101,6 +116,9 @@ function convertirFilaEnOrdenConReserva(fila: FilaOrden): OrdenConReserva | null
     puntosUtilizados: fila.puntos_utilizados,
     fechaVerificacion: fila.fecha_verificacion ? new Date(fila.fecha_verificacion) : null,
     fechaCreacion: new Date(fila.fecha_creacion),
+    combo: fila.combo
+      ? { id: fila.combo.id, nombre: fila.combo.nombre, precio: fila.combo.precio, cantidadEntradas: fila.combo.cantidad_entradas }
+      : null,
   };
 
   const reserva: Reserva = {
@@ -121,33 +139,90 @@ export function calcularPuntosOrden(funcion: Funcion, cantidadButacas: number, a
   return cantidadButacas * funcion.puntos + articulos.reduce((total, articulo) => total + articulo.puntos, 0);
 }
 
-/** Calcula el total en dinero de las butacas (con recargo) y los artículos, sin descuentos. */
-export function calcularTotalOrden(funcion: Funcion, butacas: string[], articulos: Articulo[]): number {
-  return calcularPrecioButacas(funcion, butacas) + articulos.reduce((total, articulo) => total + articulo.precio, 0);
+/**
+ * Calcula los precios en dinero de las butacas (con recargo) y los artículos.
+ * `porcentajeDescuento` (0 a 100) se aplica por separado sobre butacas y artículos, redondeado al peso.
+ */
+export function calcularPreciosOrden(
+  funcion: Funcion,
+  butacas: string[],
+  articulos: Articulo[],
+  porcentajeDescuento = 0,
+): PreciosOrden {
+  const factor = 1 - porcentajeDescuento / 100;
+  const butacasSinDescuento = calcularPrecioButacas(funcion, butacas);
+  const articulosSinDescuento = articulos.reduce((total, articulo) => total + articulo.precio, 0);
+
+  const precioButacas = Math.round(butacasSinDescuento * factor);
+  const precioArticulos = Math.round(articulosSinDescuento * factor);
+  const total = precioButacas + precioArticulos;
+  return {
+    precioButacas,
+    precioArticulos,
+    total,
+    descuentoAplicado: butacasSinDescuento + articulosSinDescuento - total,
+  };
 }
 
 @Injectable({ providedIn: 'root' })
 export class OrdenService {
   private readonly supabase = inject(SupabaseService);
+  private readonly configuracionService = inject(ConfiguracionService);
+
+  /**
+   * Devuelve el porcentaje de descuento de primera compra que le corresponde al usuario.
+   * Es 0 si es anónimo o si ya tiene una orden con reserva. Las órdenes canceladas no tienen reserva y no cuentan.
+   */
+  async obtenerPorcentajeDescuentoPrimeraCompra(usuario: Usuario | null): Promise<number> {
+    if (!usuario) return 0;
+
+    const { count, error } = await this.supabase.cliente
+      .from('orden')
+      .select('id, reserva!inner(id)', { count: 'exact', head: true })
+      .eq('usuario_id', usuario.id);
+    if (error) throw error;
+    if (count) return 0;
+
+    const { descuentoPrimeraCompra } = await this.configuracionService.obtenerConfiguracion();
+    return descuentoPrimeraCompra;
+  }
 
   /**
    * Crea la orden de compra y la reserva de butacas/artículos asociada.
-   * TODO: calcular `descuentoAplicado` según las reglas de negocio (primera
-   * compra, mayores de 50 años) a partir de la tabla `configuracion`.
+   * En la primera compra del usuario, con dinero o saldo, aplica el descuento de `configuracion`
+   * sobre `precioButacas`, `precioArticulos` y `total`, y guarda el monto en `descuentoAplicado`.
    * Con `pagoConPuntos`, guarda los puntos de las butacas y los artículos en `puntos_utilizados`.
    * La base de datos acredita y descuenta los puntos del usuario.
+   * Con `combo`, guarda su id en `combo_id` y arma los precios a partir del combo.
    * Con `pagoConSaldo`, descuenta el total del `saldo` del usuario al terminar de crear la reserva.
    */
-  async crearOrden({ funcion, butacas, articulos, usuario, emailContacto, pagoConPuntos, pagoConSaldo }: SolicitudCrearOrden): Promise<OrdenConReserva> {
+  async crearOrden({ funcion, butacas, articulos: articulosElegidos, combo, usuario, emailContacto, pagoConPuntos, pagoConSaldo }: SolicitudCrearOrden): Promise<OrdenConReserva> {
     if (pagoConSaldo && (!usuario || pagoConPuntos)) {
       throw new Error('El pago con saldo requiere un usuario registrado y no puede combinarse con puntos.');
     }
+    if (combo && butacas.length !== combo.cantidadEntradas) {
+      throw new Error(`El combo requiere exactamente ${combo.cantidadEntradas} butacas.`);
+    }
 
-    const descuentoAplicado = 0;
-    const precioButacas = calcularPrecioButacas(funcion, butacas);
-    const precioArticulos = articulos.reduce((total, articulo) => total + articulo.precio, 0);
-    const total = precioButacas + precioArticulos - descuentoAplicado;
-    const puntosUtilizados = pagoConPuntos ? calcularPuntosOrden(funcion, butacas.length, articulos) : null;
+    // Con combo, los artículos y los precios salen del combo; no se aplican recargos ni descuentos.
+    const lineasArticulos: ArticuloCombo[] = combo
+      ? combo.articulos
+      : articulosElegidos.map((articulo) => ({ articulo, cantidad: 1 }));
+    const articulos = lineasArticulos.map(({ articulo }) => articulo);
+    const unidadesArticulos = lineasArticulos.flatMap(({ articulo, cantidad }) => Array<Articulo>(cantidad).fill(articulo));
+
+    let precios: PreciosOrden;
+    if (combo) {
+      precios = { ...repartirPrecioCombo(combo), total: combo.precio, descuentoAplicado: 0 };
+    } else {
+      const porcentajeDescuento = pagoConPuntos ? 0 : await this.obtenerPorcentajeDescuentoPrimeraCompra(usuario);
+      precios = calcularPreciosOrden(funcion, butacas, articulos, porcentajeDescuento);
+    }
+    const { precioButacas, precioArticulos, total, descuentoAplicado } = precios;
+    const comboOrden: ComboOrden | null = combo
+      ? { id: combo.id, nombre: combo.nombre, precio: combo.precio, cantidadEntradas: combo.cantidadEntradas }
+      : null;
+    const puntosUtilizados = pagoConPuntos ? calcularPuntosOrden(funcion, butacas.length, unidadesArticulos) : null;
     const qrData = generarCodigoOrden();
 
     const { data: filaOrden, error: errorOrden } = await this.supabase.cliente
@@ -161,6 +236,7 @@ export class OrdenService {
         verificada: false,
         pago_con_puntos: pagoConPuntos,
         puntos_utilizados: puntosUtilizados,
+        combo_id: combo?.id ?? null,
       })
       .select('id, fecha_creacion')
       .single<{ id: string; fecha_creacion: string }>();
@@ -183,11 +259,11 @@ export class OrdenService {
       if (articulos.length > 0) {
         const { error: errorArticulos } = await this.supabase.cliente
           .from('reserva_articulo')
-          .insert(articulos.map((articulo) => {
+          .insert(lineasArticulos.map(({ articulo, cantidad }) => {
             return {
               reserva_id: filaReserva.id,
               articulo_id: articulo.id,
-              cantidad: 1,
+              cantidad,
               precio_unitario: pagoConPuntos ? articulo.puntos : articulo.precio};
           }));
         if (errorArticulos) throw errorArticulos;
@@ -207,6 +283,7 @@ export class OrdenService {
         puntosUtilizados,
         fechaVerificacion: null,
         fechaCreacion: new Date(filaOrden.fecha_creacion),
+        combo: comboOrden,
       };
       const reserva: Reserva = { id: filaReserva.id, orden, funcion, butacas, articulos, precioButacas, precioArticulos };
       return { orden, reserva };
@@ -268,7 +345,7 @@ export class OrdenService {
   async obtenerFacturaciones({ fechaDesde, fechaHasta, pagoConPuntos, verificada }: FiltroFacturaciones): Promise<Facturacion[]> {
     let consulta = this.supabase.cliente
       .from('orden')
-      .select('id, email_contacto, total, verificada, pago_con_puntos, puntos_utilizados, fecha_creacion, usuario(email), reserva(funcion_id, precio_butacas, precio_articulos)');
+      .select('id, email_contacto, total, descuento_aplicado, verificada, pago_con_puntos, puntos_utilizados, fecha_creacion, usuario(email), reserva(funcion_id, precio_butacas, precio_articulos)');
 
     if (fechaDesde) {
       const inicioDia = new Date(fechaDesde.getFullYear(), fechaDesde.getMonth(), fechaDesde.getDate());
@@ -294,6 +371,7 @@ export class OrdenService {
         pagoConPuntos: fila.pago_con_puntos,
         puntosUtilizados: fila.puntos_utilizados,
         total: fila.total,
+        descuentoAplicado: fila.descuento_aplicado,
         verificada: fila.verificada,
         precioButacas: filaReserva?.precio_butacas ?? null,
         precioArticulos: filaReserva?.precio_articulos ?? null,

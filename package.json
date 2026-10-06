@@ -19,6 +19,8 @@
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
     "@angular/service-worker": "^21.2.0",
+    "@primeui/angular-chart": "^1.2.0",
+    "@primeui/chart-style": "^1.2.0",
     "@primeuix/themes": "^3.0.1",
     "@supabase/supabase-js": "^2.116.0",
     "@tailwindcss/postcss": "^4.3.3",

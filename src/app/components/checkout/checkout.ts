@@ -3,6 +3,7 @@ import { Component, inject, input, resource, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import * as QRCode from 'qrcode';
 
+import { calcularPrecioButacas } from '../../classes/funcion';
 import { Orden } from '../../classes/orden';
 import { Reserva } from '../../classes/reserva';
 import { OrdenService } from '../../services/orden.service';
@@ -22,6 +23,9 @@ interface DatosCheckout {
 export class Checkout {
   private readonly ordenService = inject(OrdenService);
   private readonly ticketPdfService = inject(TicketPdfService);
+
+  /** Precio de las butacas sin descuento: el recibo lo muestra y resta el descuento aparte. */
+  protected readonly calcularPrecioButacas = calcularPrecioButacas;
 
   /** Id de la orden, tomado del parámetro `:idOrden` de la ruta. */
   readonly idOrden = input.required<string>();

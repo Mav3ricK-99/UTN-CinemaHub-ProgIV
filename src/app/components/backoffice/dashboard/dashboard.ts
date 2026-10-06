@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, resource } from '@angular/core';
+import { TabsModule } from 'primeng/tabs';
 
 import { TOTAL_BUTACAS_SALA } from '../../../classes/sala';
 import { FuncionService } from '../../../services/funcion.service';
@@ -7,12 +8,14 @@ import { OrdenService } from '../../../services/orden.service';
 import { ResenaService } from '../../../services/resena.service';
 import { SalaService } from '../../../services/sala.service';
 import { EstadoSala } from './estado-sala';
+import { GraficoCandy } from './grafico-candy/grafico-candy';
+import { GraficoPeliculas } from './grafico-peliculas/grafico-peliculas';
 import { TarjetaMetrica } from './tarjeta-metrica/tarjeta-metrica';
 import { TarjetaSala } from './tarjeta-sala/tarjeta-sala';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DatePipe, TarjetaMetrica, TarjetaSala],
+  imports: [DatePipe, GraficoCandy, GraficoPeliculas, TabsModule, TarjetaMetrica, TarjetaSala],
   templateUrl: './dashboard.html',
 })
 export class Dashboard {

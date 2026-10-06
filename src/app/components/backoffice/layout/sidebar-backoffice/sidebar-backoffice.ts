@@ -12,8 +12,10 @@ const ITEMS_SIDEBAR: ItemSidebar[] = [
   { etiqueta: 'Películas', icono: 'pi pi-video', ruta: '/backoffice/peliculas' },
   { etiqueta: 'Funciones', icono: 'pi pi-calendar', ruta: '/backoffice/funciones' },
   { etiqueta: 'Artículos', icono: 'pi pi-shopping-bag', ruta: '/backoffice/articulos' },
+  { etiqueta: 'Combos', icono: 'pi pi-gift', ruta: '/backoffice/combos' },
   { etiqueta: 'Facturaciones', icono: 'pi pi-receipt', ruta: '/backoffice/facturaciones' },
-  { etiqueta: 'Configuración', icono: 'pi pi-cog', ruta: null },
+  { etiqueta: 'Auditorías', icono: 'pi pi-shield', ruta: '/backoffice/auditorias' },
+  { etiqueta: 'Configuración', icono: 'pi pi-cog', ruta: '/backoffice/configuracion' },
 ];
 
 @Component({

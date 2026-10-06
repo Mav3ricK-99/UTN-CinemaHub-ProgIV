@@ -14,6 +14,8 @@ const CANTIDAD_MAXIMA_ARTICULOS = 6;
 export class CarrouselArticulos {
   readonly articulos = input.required<Articulo[]>();
   readonly articulosSeleccionados = model<Articulo[]>([]);
+  /** Bloquea la selección, por ejemplo mientras hay un combo elegido. */
+  readonly deshabilitado = input(false);
 
   protected readonly imagenPlaceholder = IMAGEN_ARTICULO_PLACEHOLDER;
   protected readonly articulosMostrados = computed(() => this.articulos().slice(0, CANTIDAD_MAXIMA_ARTICULOS));

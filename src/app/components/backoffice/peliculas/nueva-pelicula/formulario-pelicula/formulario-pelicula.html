@@ -125,7 +125,7 @@
       class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
       [disabled]="formulario().submitting()"
     >
-      {{ formulario().submitting() ? 'Guardando...' : 'Guardar película' }}
+      {{ formulario().submitting() ? 'Guardando...' : pelicula() ? 'Editar' : 'Guardar película' }}
     </button>
   </form>
 

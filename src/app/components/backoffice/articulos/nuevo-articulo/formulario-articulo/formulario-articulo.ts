@@ -1,4 +1,4 @@
-import { Component, inject, output, resource, signal } from '@angular/core';
+import { Component, inject, input, linkedSignal, output, resource, signal } from '@angular/core';
 import { form, FormField, FormRoot, min, required } from '@angular/forms/signals';
 
 import { Articulo } from '../../../../../classes/articulo';
@@ -23,6 +23,16 @@ function crearModeloVacio(): ModeloArticulo {
   return { nombre: '', disponible: true, precio: null, puntos: null, categoria: null };
 }
 
+function crearModeloDesdeArticulo(articulo: Articulo): ModeloArticulo {
+  return {
+    nombre: articulo.nombre,
+    disponible: articulo.disponible,
+    precio: articulo.precio,
+    puntos: articulo.puntos,
+    categoria: articulo.categoria,
+  };
+}
+
 @Component({
   selector: 'app-formulario-articulo',
   imports: [FormField, FormRoot, SelectorCategoriaArticulo, SelectorDisponibilidad],
@@ -32,9 +42,14 @@ export class FormularioArticulo {
   private readonly articuloService = inject(ArticuloService);
   private readonly categoriaArticuloService = inject(CategoriaArticuloService);
 
-  readonly creado = output<Articulo>();
+  /** Artículo a editar. Si es `null`, el formulario funciona como alta. */
+  readonly articulo = input<Articulo | null>(null);
+  readonly guardado = output<Articulo>();
 
-  protected readonly modelo = signal(crearModeloVacio());
+  protected readonly modelo = linkedSignal<ModeloArticulo>(() => {
+    const articulo = this.articulo();
+    return articulo ? crearModeloDesdeArticulo(articulo) : crearModeloVacio();
+  });
   protected readonly categoriasDisponibles = resource({
     loader: () => this.categoriaArticuloService.obtenerCategoriasArticulo(),
   });
@@ -63,14 +78,12 @@ export class FormularioArticulo {
           if (precio === null || puntos === null || !categoria) return undefined;
 
           try {
-            const articulo = await this.articuloService.crearArticulo({
-              nombre: nombre.trim(),
-              precio,
-              puntos,
-              categoria,
-              disponible,
-            });
-            this.creado.emit(articulo);
+            const datos = { nombre: nombre.trim(), precio, puntos, categoria, disponible };
+            const articuloEditado = this.articulo();
+            const articulo = articuloEditado
+              ? await this.articuloService.modificarArticulo({ ...datos, id: articuloEditado.id })
+              : await this.articuloService.crearArticulo(datos);
+            this.guardado.emit(articulo);
           } catch {
             this.errorGeneral.set('No se pudo guardar el artículo. Intentá nuevamente.');
           }

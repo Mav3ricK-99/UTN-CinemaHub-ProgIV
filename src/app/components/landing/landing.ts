@@ -39,7 +39,21 @@ export class Landing {
     loader: () => this.funcionService.obtenerFuncionesPasadas(),
   });
 
-  protected readonly funcionesProximasUnicas = computed(() => unaPorPelicula(this.funcionesProximas.value() ?? []));
+  private readonly reservasPorPelicula = resource({
+    loader: () => this.funcionService.obtenerButacasReservadasPorPelicula(),
+  });
+
+  /** Una función por película, con las películas más reservadas primero. */
+  protected readonly funcionesProximasUnicas = computed(() => {
+    const reservasPorPelicula = this.reservasPorPelicula.value();
+    const funciones = unaPorPelicula(this.funcionesProximas.value() ?? []);
+    if (!reservasPorPelicula) return funciones;
+
+    // sort es estable: a igual cantidad de reservas se mantiene el orden por fecha.
+    return funciones.sort(
+      (a, b) => (reservasPorPelicula.get(b.pelicula.id) ?? 0) - (reservasPorPelicula.get(a.pelicula.id) ?? 0),
+    );
+  });
 
   protected readonly funcionesPasadasUnicas = computed(() => unaPorPelicula(this.funcionesPasadas.value() ?? []));
 }

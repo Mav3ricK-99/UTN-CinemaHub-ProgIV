@@ -9,6 +9,7 @@ const ENCABEZADOS = [
   'Email',
   'Pagó con puntos',
   'Puntos utilizados',
+  'Descuento primera compra',
   'Total',
   'Verificada',
   'Precio butacas',
@@ -42,6 +43,7 @@ function armarFila(facturacion: Facturacion): string[] {
     facturacion.email,
     textoSiNo(facturacion.pagoConPuntos),
     facturacion.puntosUtilizados === null ? '-' : String(facturacion.puntosUtilizados),
+    facturacion.descuentoAplicado > 0 ? textoMonto(facturacion.descuentoAplicado) : 'No',
     textoMonto(facturacion.total),
     textoSiNo(facturacion.verificada),
     textoMonto(facturacion.precioButacas),
@@ -65,7 +67,7 @@ export class ReporteFacturacionesService {
 
     hoja.columns = ENCABEZADOS.map((encabezado, indice) => ({
       header: encabezado,
-      width: indice === 0 || indice === 1 ? 38 : indice === 3 ? 32 : 18,
+      width: indice === 0 || indice === 1 ? 38 : indice === 3 ? 32 : indice === 6 ? 26 : 18,
     }));
     hoja.getRow(1).font = { bold: true };
 

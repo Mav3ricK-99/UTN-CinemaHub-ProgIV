@@ -1,18 +1,32 @@
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
-import { Component, computed, DestroyRef, inject, input, resource, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  linkedSignal,
+  resource,
+  signal,
+  untracked,
+} from '@angular/core';
 import { email, form, FormField, FormRoot, validate } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
 
 import { Articulo } from '../../classes/articulo';
 import { obtenerEdadMinima } from '../../classes/clasificacion';
+import { ComboDetalle, repartirPrecioCombo } from '../../classes/combo';
 import { ArticuloService } from '../../services/articulo.service';
 import { AuthService } from '../../services/auth.service';
+import { ComboService } from '../../services/combo.service';
 import { FuncionService } from '../../services/funcion.service';
-import { calcularPuntosOrden, calcularTotalOrden, OrdenService } from '../../services/orden.service';
+import { calcularPreciosOrden, calcularPuntosOrden, OrdenService } from '../../services/orden.service';
 import { calcularEdad } from '../registro/validadores-registro';
 import { EstrellasCalificacion } from '../shared/estrellas-calificacion/estrellas-calificacion';
 import { CarrouselArticulos } from './carrousel-articulos/carrousel-articulos';
-import { MapaButacas } from './mapa-butacas/mapa-butacas';
+import { CarrouselCombos } from './carrousel-combos/carrousel-combos';
+import { MapaButacas, MAXIMO_BUTACAS_SELECCIONADAS } from './mapa-butacas/mapa-butacas';
 import { ResenasPelicula } from './resenas-pelicula/resenas-pelicula';
 import { requeridoSiAnonimo, requeridoSiRequiereAcompanante } from './validadores-seleccion-butaca';
 
@@ -33,6 +47,7 @@ function pluralizar(cantidad: number, singular: string, plural: string): string 
     FormField,
     FormRoot,
     CarrouselArticulos,
+    CarrouselCombos,
     EstrellasCalificacion,
     DecimalPipe,
     CurrencyPipe,
@@ -44,6 +59,7 @@ export class SeleccionButaca {
   private readonly funcionService = inject(FuncionService);
   private readonly ordenService = inject(OrdenService);
   private readonly articuloService = inject(ArticuloService);
+  private readonly comboService = inject(ComboService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
@@ -59,8 +75,27 @@ export class SeleccionButaca {
     loader: () => this.articuloService.obtenerArticulosDisponibles(),
   });
 
+  protected readonly combosDisponibles = resource({
+    loader: () => this.comboService.obtenerCombosDisponibles(),
+  });
+
+  /** Porcentaje de descuento de primera compra del usuario. 0 si es anónimo o no le corresponde. */
+  protected readonly porcentajeDescuento = resource({
+    params: () => this.authService.usuario(),
+    loader: ({ params: usuario }) => this.ordenService.obtenerPorcentajeDescuentoPrimeraCompra(usuario),
+  });
+
+  /** Butacas ocupadas de la función. Parte de la carga inicial y se actualiza en tiempo real. */
+  protected readonly butacasReservadas = linkedSignal(() => this.funcion.value()?.butacasReservadas ?? []);
+
   protected readonly butacasSeleccionadas = signal<string[]>([]);
   protected readonly articulosSeleccionados = signal<Articulo[]>([]);
+  protected readonly comboSeleccionado = signal<ComboDetalle | null>(null);
+
+  /** Con un combo, la cantidad de butacas queda fijada por `cantidadEntradas`. */
+  protected readonly maximoButacas = computed(
+    () => this.comboSeleccionado()?.cantidadEntradas ?? MAXIMO_BUTACAS_SELECCIONADAS,
+  );
   protected readonly usuario = this.authService.usuario;
   protected readonly errorReserva = signal<string | null>(null);
 
@@ -99,7 +134,11 @@ export class SeleccionButaca {
   protected readonly puntosTotales = computed(() => {
     const funcion = this.funcion.value();
     if (!funcion) return 0;
-    return calcularPuntosOrden(funcion, this.butacasSeleccionadas().length, this.articulosSeleccionados());
+    const combo = this.comboSeleccionado();
+    const articulos = combo
+      ? combo.articulos.flatMap(({ articulo, cantidad }) => Array<Articulo>(cantidad).fill(articulo))
+      : this.articulosSeleccionados();
+    return calcularPuntosOrden(funcion, this.butacasSeleccionadas().length, articulos);
   });
 
   /** `true` si el usuario registrado tiene puntos para cubrir la totalidad de la reserva. */
@@ -108,12 +147,27 @@ export class SeleccionButaca {
     return usuario !== null && this.butacasSeleccionadas().length > 0 && usuario.puntos >= this.puntosTotales();
   });
 
-  /** Total en dinero de las butacas y los artículos seleccionados. */
-  protected readonly totalDinero = computed(() => {
+  /** Precios en dinero de las butacas y los artículos seleccionados, con el descuento de primera compra. */
+  private readonly preciosDinero = computed(() => {
     const funcion = this.funcion.value();
-    if (!funcion) return 0;
-    return calcularTotalOrden(funcion, this.butacasSeleccionadas(), this.articulosSeleccionados());
+    if (!funcion) return null;
+
+    const combo = this.comboSeleccionado();
+    if (combo) return { ...repartirPrecioCombo(combo), total: combo.precio, descuentoAplicado: 0 };
+
+    return calcularPreciosOrden(
+      funcion,
+      this.butacasSeleccionadas(),
+      this.articulosSeleccionados(),
+      this.porcentajeDescuento.value() ?? 0,
+    );
   });
+
+  /** Total en dinero de las butacas y los artículos seleccionados, con el descuento de primera compra. */
+  protected readonly totalDinero = computed(() => this.preciosDinero()?.total ?? 0);
+
+  /** Monto que se descuenta del total en dinero. 0 si no corresponde descuento. */
+  protected readonly descuentoDinero = computed(() => this.preciosDinero()?.descuentoAplicado ?? 0);
 
   /** `true` si el usuario registrado tiene saldo para cubrir la totalidad de la reserva. */
   protected readonly puedePagarConSaldo = computed(() => {
@@ -148,7 +202,8 @@ export class SeleccionButaca {
             const { orden } = await this.ordenService.crearOrden({
               funcion: funcionActual,
               butacas: this.butacasSeleccionadas(),
-              articulos: this.articulosSeleccionados(),
+              articulos: this.comboSeleccionado() ? [] : this.articulosSeleccionados(),
+              combo: this.comboSeleccionado(),
               usuario: this.usuario(),
               emailContacto: this.usuario() ? null : this.modelo().emailContacto.trim(),
               pagoConPuntos: this.pagaConPuntos(),
@@ -169,11 +224,35 @@ export class SeleccionButaca {
   protected readonly reservaHabilitada = computed(
     () =>
       this.butacasSeleccionadas().length > 0 &&
+      (!this.comboSeleccionado() || this.butacasSeleccionadas().length === this.maximoButacas()) &&
       (!this.requiereAcompanante() || this.modelo().acompanado) &&
       !this.formulario().submitting(),
   );
 
+  /** Al elegir un combo (o quitarlo) se limpian las butacas y los artículos ya seleccionados. */
+  protected alSeleccionarCombo(combo: ComboDetalle | null): void {
+    this.comboSeleccionado.set(combo);
+    this.butacasSeleccionadas.set([]);
+    this.articulosSeleccionados.set([]);
+  }
+
   constructor() {
+    effect((alLimpiar) => {
+      const cancelarSuscripcion = this.funcionService.suscribirseAButacasReservadas(this.idFuncion(), (reservadas) =>
+        this.butacasReservadas.set(reservadas),
+      );
+      alLimpiar(cancelarSuscripcion);
+    });
+
+    // Si otro usuario ocupa una butaca que está seleccionada, se quita de la selección.
+    effect(() => {
+      const reservadas = new Set(this.butacasReservadas());
+      const seleccionadas = untracked(this.butacasSeleccionadas);
+      if (seleccionadas.some((idButaca) => reservadas.has(idButaca))) {
+        this.butacasSeleccionadas.set(seleccionadas.filter((idButaca) => !reservadas.has(idButaca)));
+      }
+    });
+
     const temporizador = setInterval(() => this.ahora.set(Date.now()), INTERVALO_CRONOMETRO_MS);
     inject(DestroyRef).onDestroy(() => clearInterval(temporizador));
   }

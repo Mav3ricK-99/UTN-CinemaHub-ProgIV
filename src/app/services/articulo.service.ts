@@ -33,6 +33,18 @@ export function convertirFilaEnArticulo(fila: FilaArticulo): Articulo {
   };
 }
 
+export interface UnidadesPorArticulo {
+  nombre: string;
+  unidades: number;
+}
+
+interface FilaReservaArticulo {
+  cantidad: number;
+  articulo: { id: string; nombre: string };
+}
+
+const CANTIDAD_ARTICULOS_GRAFICO = 5;
+
 @Injectable({ providedIn: 'root' })
 export class ArticuloService {
   private readonly supabase = inject(SupabaseService);
@@ -68,6 +80,18 @@ export class ArticuloService {
     return convertirFilaEnArticulo(data);
   }
 
+  /** Devuelve el artículo con el id indicado, o `null` si no existe. */
+  async obtenerArticuloPorId(idArticulo: string): Promise<Articulo | null> {
+    const { data, error } = await this.supabase.cliente
+      .from('articulo')
+      .select('id, nombre, precio, puntos, disponible, categoria_articulo(id, nombre)')
+      .eq('id', idArticulo)
+      .maybeSingle<FilaArticulo>();
+
+    if (error) throw error;
+    return data ? convertirFilaEnArticulo(data) : null;
+  }
+
   /** Devuelve todos los artículos, disponibles o no. */
   async obtenerArticulos(): Promise<Articulo[]> {
     const { data, error } = await this.supabase.cliente
@@ -78,6 +102,28 @@ export class ArticuloService {
 
     if (error) throw error;
     return data.map(convertirFilaEnArticulo);
+  }
+
+  /** Devuelve los artículos con más unidades vendidas en todas las reservas, de mayor a menor. */
+  async obtenerArticulosMasVendidos(cantidad = CANTIDAD_ARTICULOS_GRAFICO): Promise<UnidadesPorArticulo[]> {
+    const { data, error } = await this.supabase.cliente
+      .from('reserva_articulo')
+      .select('cantidad, articulo(id, nombre)')
+      .returns<FilaReservaArticulo[]>();
+
+    if (error) throw error;
+
+    const unidadesPorArticulo = new Map<string, UnidadesPorArticulo>();
+    for (const { cantidad: unidades, articulo } of data) {
+      const acumulado = unidadesPorArticulo.get(articulo.id);
+      if (acumulado) {
+        acumulado.unidades += unidades;
+      } else {
+        unidadesPorArticulo.set(articulo.id, { nombre: articulo.nombre, unidades });
+      }
+    }
+
+    return [...unidadesPorArticulo.values()].sort((a, b) => b.unidades - a.unidades).slice(0, cantidad);
   }
 
   /** Devuelve los artículos con `disponible = true`. */

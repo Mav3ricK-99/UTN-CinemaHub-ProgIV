@@ -1,4 +1,4 @@
-import { FieldValidator, PathKind } from '@angular/forms/signals';
+import { FieldValidator, PathKind, SchemaPath } from '@angular/forms/signals';
 
 import { PeriodoFuncion } from '../../../../shared/selector-periodo-funcion/selector-periodo-funcion';
 
@@ -33,6 +33,24 @@ export function periodoCompleto(): FieldValidator<PeriodoFuncion, PathKind.Child
       return { kind: 'rangoInvalido', message: 'La fecha de fin no puede ser anterior a la fecha de inicio.' };
     }
     return null;
+  };
+}
+
+/** En edición la función ocupa un solo día: el rango debe ser ese día y coincidir con el día de la semana elegido. */
+export function unSoloDia(rutaDiasSemana: SchemaPath<number[]>): FieldValidator<PeriodoFuncion, PathKind.Child> {
+  return ({ value, valueOf }) => {
+    const { fechaDesde, fechaHasta } = value();
+    if (!fechaDesde || !fechaHasta) return null;
+
+    const mismoDia = fechaDesde.toDateString() === fechaHasta.toDateString();
+    const dias = valueOf(rutaDiasSemana);
+    const diaSemana = fechaDesde.getDay() === 0 ? 7 : fechaDesde.getDay();
+    if (mismoDia && dias.length === 1 && dias[0] === diaSemana) return null;
+
+    return {
+      kind: 'unSoloDia',
+      message: 'Una función ocupa un solo día: elegí ese día en el rango de fechas y en los días de la semana.',
+    };
   };
 }
 

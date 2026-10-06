@@ -1,4 +1,4 @@
-import { CurrencyPipe, DecimalPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, ElementRef, HostListener, inject, resource, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
@@ -7,7 +7,7 @@ import { Avatar } from 'primeng/avatar';
 import { Menu } from 'primeng/menu';
 
 import { AuthService } from '../../../services/auth.service';
-import { PeliculaService } from '../../../services/pelicula.service';
+import { FuncionService } from '../../../services/funcion.service';
 
 const LARGO_MINIMO_BUSQUEDA = 2;
 const ESPERA_BUSQUEDA_MS = 250;
@@ -15,11 +15,11 @@ const UMBRAL_SCROLL_PX = 10;
 
 @Component({
   selector: 'app-navbar',
-  imports: [RouterLink, FormField, Avatar, Menu, DecimalPipe, CurrencyPipe],
+  imports: [RouterLink, FormField, Avatar, Menu, DecimalPipe, CurrencyPipe, DatePipe],
   templateUrl: './navbar.html',
 })
 export class Navbar {
-  private readonly peliculaService = inject(PeliculaService);
+  private readonly funcionService = inject(FuncionService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -64,7 +64,7 @@ export class Navbar {
     loader: async ({ params: termino, abortSignal }) => {
       await new Promise((resolver) => setTimeout(resolver, ESPERA_BUSQUEDA_MS));
       if (abortSignal.aborted) return [];
-      return this.peliculaService.obtenerPeliculas(termino);
+      return this.funcionService.buscarPeliculasConFuncionesProximas(termino);
     },
   });
 
@@ -95,6 +95,11 @@ export class Navbar {
   protected limpiarBusqueda(): void {
     this.busqueda.termino().value.set('');
     this.resultadosAbiertos.set(false);
+  }
+
+  protected async irAFuncionProxima(idFuncion: string): Promise<void> {
+    this.limpiarBusqueda();
+    await this.router.navigate(['/reserva', idFuncion]);
   }
 
   private async cerrarSesion(): Promise<void> {

@@ -1,0 +1,87 @@
+<form
+  [formRoot]="formulario"
+  novalidate
+  class="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+>
+  <div>
+    <label for="combo-nombre" class="mb-1 block text-sm font-semibold text-slate-700">Nombre</label>
+    <input
+      id="combo-nombre"
+      type="text"
+      class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none"
+      [formField]="formulario.nombre"
+      [attr.aria-invalid]="formulario.nombre().touched() && formulario.nombre().invalid()"
+    />
+    @if (formulario.nombre().touched()) {
+      @for (error of formulario.nombre().errors(); track error.kind) {
+        <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+      }
+    }
+  </div>
+
+  <div>
+    <label for="combo-descripcion" class="mb-1 block text-sm font-semibold text-slate-700">
+      Descripción <span class="font-normal text-slate-400">(opcional)</span>
+    </label>
+    <textarea
+      id="combo-descripcion"
+      rows="2"
+      class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none"
+      [formField]="formulario.descripcion"
+    ></textarea>
+  </div>
+
+  <div>
+    <label for="combo-entradas" class="mb-1 block text-sm font-semibold text-slate-700">Cantidad de butacas</label>
+    <input
+      id="combo-entradas"
+      type="number"
+      class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none"
+      [formField]="formulario.cantidadEntradas"
+      [attr.aria-invalid]="formulario.cantidadEntradas().touched() && formulario.cantidadEntradas().invalid()"
+    />
+    @if (formulario.cantidadEntradas().touched()) {
+      @for (error of formulario.cantidadEntradas().errors(); track error.kind) {
+        <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+      }
+    }
+  </div>
+
+  <div>
+    <p class="mb-1 block text-sm font-semibold text-slate-700">Artículos</p>
+    <app-selector-articulos [opciones]="articulosDisponibles.value() ?? []" [formField]="formulario.articulos" />
+    @if (formulario.articulos().touched()) {
+      @for (error of formulario.articulos().errors(); track error.kind) {
+        <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+      }
+    }
+  </div>
+
+  <div>
+    <label for="combo-precio" class="mb-1 block text-sm font-semibold text-slate-700">Precio del combo</label>
+    <input
+      id="combo-precio"
+      type="number"
+      class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none"
+      [formField]="formulario.precio"
+      [attr.aria-invalid]="formulario.precio().touched() && formulario.precio().invalid()"
+    />
+    @if (formulario.precio().touched()) {
+      @for (error of formulario.precio().errors(); track error.kind) {
+        <p class="mt-1 text-xs text-red-600">{{ error.message }}</p>
+      }
+    }
+  </div>
+
+  @if (errorGeneral()) {
+    <p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ errorGeneral() }}</p>
+  }
+
+  <button
+    type="submit"
+    class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+    [disabled]="formulario().submitting()"
+  >
+    {{ formulario().submitting() ? 'Guardando...' : 'Guardar combo' }}
+  </button>
+</form>

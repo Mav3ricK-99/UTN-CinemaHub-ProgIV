@@ -42,6 +42,7 @@
             <p-sortIcon field="fechaInicio" />
           </th>
           <th class="px-4 py-3">Sala libre desde</th>
+          <th class="px-4 py-3"></th>
         </tr>
       </ng-template>
 
@@ -61,12 +62,22 @@
           </td>
           <td class="px-4 py-3 text-slate-600">{{ funcion.fechaInicio | date: 'EEE d MMM · HH:mm' : 'UTC' }}</td>
           <td class="px-4 py-3 text-slate-600">{{ salaLibreDesde(funcion) | date: 'EEE d MMM · HH:mm' : 'UTC' }}</td>
+          <td class="px-4 py-3 text-right">
+            @if (esProxima(funcion)) {
+              <a
+                [routerLink]="['/backoffice/funciones', funcion.id, 'editar']"
+                class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Editar
+              </a>
+            }
+          </td>
         </tr>
       </ng-template>
 
       <ng-template #emptymessage>
         <tr>
-          <td colspan="6" class="px-4 py-6 text-center text-slate-500">No hay funciones cargadas.</td>
+          <td colspan="7" class="px-4 py-6 text-center text-slate-500">No hay funciones cargadas.</td>
         </tr>
       </ng-template>
     </p-table>

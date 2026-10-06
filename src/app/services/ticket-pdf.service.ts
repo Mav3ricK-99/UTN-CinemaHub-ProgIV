@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { jsPDF } from 'jspdf';
 import * as QRCode from 'qrcode';
 
+import { calcularPrecioButacas } from '../classes/funcion';
 import { Orden } from '../classes/orden';
 import { Reserva } from '../classes/reserva';
 
@@ -36,8 +37,10 @@ function formatearPuntos(puntos: number): string {
 export class TicketPdfService {
   /** Arma el PDF del ticket de una orden y dispara su descarga en el navegador. */
   async descargarTicket(orden: Orden, reserva: Reserva): Promise<void> {
-    const { funcion, butacas, articulos, precioButacas } = reserva;
-    const { pagoConPuntos } = orden;
+    const { funcion, butacas, articulos } = reserva;
+    const { pagoConPuntos, combo } = orden;
+    /** Con combo pagado en dinero, el detalle no muestra precios de lista: el total es el precio del combo. */
+    const incluidoEnCombo = combo !== null && !pagoConPuntos;
 
     const qrDataUrl = await QRCode.toDataURL(orden.qrData, { margin: 1, width: 400 });
 
@@ -77,6 +80,12 @@ export class TicketPdfService {
       documento.text(linea, MARGEN_MM, y);
       y += 5.5;
     }
+    if (combo) {
+      documento.setFont('helvetica', 'bold');
+      documento.setTextColor(...COLOR_MARCA);
+      documento.text(`Combo: ${combo.nombre}`, MARGEN_MM, y);
+      y += 5.5;
+    }
     y += 5;
 
     documento.setFont('helvetica', 'bold');
@@ -102,7 +111,11 @@ export class TicketPdfService {
     documento.text(`Entradas (${butacas.join(', ')})`, MARGEN_MM, y);
     documento.text(String(butacas.length), xCantidad, y, { align: 'right' });
     documento.text(
-      pagoConPuntos ? formatearPuntos(funcion.puntos * butacas.length) : formatearPrecio(precioButacas),
+      pagoConPuntos
+        ? formatearPuntos(funcion.puntos * butacas.length)
+        : incluidoEnCombo
+          ? 'Incluido'
+          : formatearPrecio(calcularPrecioButacas(funcion, butacas)),
       ANCHO_HOJA_MM - MARGEN_MM,
       y,
       { align: 'right' },
@@ -113,7 +126,7 @@ export class TicketPdfService {
       documento.text(articulo.nombre, MARGEN_MM, y);
       documento.text('1', xCantidad, y, { align: 'right' });
       documento.text(
-        pagoConPuntos ? formatearPuntos(articulo.puntos) : formatearPrecio(articulo.precio),
+        pagoConPuntos ? formatearPuntos(articulo.puntos) : incluidoEnCombo ? 'Incluido' : formatearPrecio(articulo.precio),
         ANCHO_HOJA_MM - MARGEN_MM,
         y,
         { align: 'right' },
@@ -123,7 +136,7 @@ export class TicketPdfService {
 
     if (orden.descuentoAplicado > 0 && !pagoConPuntos) {
       documento.setTextColor(...COLOR_TEXTO_SECUNDARIO);
-      documento.text('Descuento aplicado', MARGEN_MM, y);
+      documento.text('Descuento primera compra', MARGEN_MM, y);
       documento.text(`-${formatearPrecio(orden.descuentoAplicado)}`, ANCHO_HOJA_MM - MARGEN_MM, y, {
         align: 'right',
       });

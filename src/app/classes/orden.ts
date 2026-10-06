@@ -1,4 +1,8 @@
+import { Combo } from './combo';
 import { Usuario } from './usuario';
+
+/** Datos del combo que se muestran en una orden. */
+export type ComboOrden = Pick<Combo, 'id' | 'nombre' | 'precio' | 'cantidadEntradas'>;
 
 /**
  * Orden de compra generada al reservar butacas. El detalle de butacas y
@@ -17,6 +21,8 @@ export interface Orden {
   puntosUtilizados: number | null;
   fechaVerificacion: Date | null;
   fechaCreacion: Date;
+  /** Combo con el que se armó la orden. `null` si no se compró un combo. */
+  combo: ComboOrden | null;
 }
 
 const ALFABETO_CODIGO_ORDEN = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
