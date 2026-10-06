@@ -15,12 +15,13 @@ export interface SolicitudCrearPelicula {
   idioma: IdiomaPelicula;
   categorias: Categoria[];
   clasificacion: Clasificacion;
+  proximamente: boolean;
   imagen: File;
 }
 
 /** Columnas de `pelicula` con sus categorías. Otros servicios lo anidan en sus consultas. */
 export const SELECT_PELICULA =
-  'id, nombre, sinopsis, duracion_minutos, imagen_url, formato, idioma, promedio_resenas, cantidad_resenas, clasificacion(codigo, descripcion), pelicula_categoria(categoria(id, nombre))';
+  'id, nombre, sinopsis, duracion_minutos, imagen_url, formato, idioma, promedio_resenas, cantidad_resenas, proximamente, clasificacion(codigo, descripcion), pelicula_categoria(categoria(id, nombre))';
 
 /** Fila de `pelicula` tal como la devuelve PostgREST con `SELECT_PELICULA`. */
 export interface FilaPelicula {
@@ -33,6 +34,7 @@ export interface FilaPelicula {
   idioma: IdiomaPelicula;
   promedio_resenas: number | null;
   cantidad_resenas: number | null;
+  proximamente: boolean | null;
   clasificacion: Clasificacion | null;
   pelicula_categoria: { categoria: Categoria }[];
 }
@@ -50,6 +52,7 @@ export function convertirFilaEnPelicula(fila: FilaPelicula): Pelicula {
     clasificacion: fila.clasificacion,
     promedioResenas: fila.promedio_resenas ?? 0,
     cantidadResenas: fila.cantidad_resenas ?? 0,
+    proximamente: fila.proximamente ?? false,
   };
 }
 
@@ -83,6 +86,7 @@ export class PeliculaService {
         formato: solicitud.formato,
         idioma: solicitud.idioma,
         clasificacion_id: solicitud.clasificacion.id,
+        proximamente: solicitud.proximamente,
       })
       .select(SELECT_PELICULA)
       .single<FilaPelicula>();
@@ -116,6 +120,18 @@ export class PeliculaService {
     if (rutaImagen) {
       await this.supabase.cliente.storage.from(BUCKET_IMAGENES_PELICULA).remove([rutaImagen]);
     }
+  }
+
+  /** Devuelve las películas marcadas como estreno próximo, ordenadas por nombre. */
+  async obtenerPeliculasProximamente(): Promise<Pelicula[]> {
+    const { data, error } = await this.supabase.cliente
+      .from('pelicula')
+      .select(SELECT_PELICULA)
+      .eq('proximamente', true)
+      .order('nombre')
+      .returns<FilaPelicula[]>();
+    if (error) throw error;
+    return data.map(convertirFilaEnPelicula);
   }
 
   /** Devuelve las películas ordenadas por nombre. Con `termino`, solo las que lo contienen en el nombre. */

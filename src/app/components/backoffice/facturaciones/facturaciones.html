@@ -1,0 +1,138 @@
+<div class="flex flex-col gap-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Facturaciones</h1>
+    <p class="text-sm text-slate-500">
+      Órdenes con los datos de su reserva. En rojo, las órdenes canceladas. En verde, las órdenes verificadas.
+    </p>
+  </div>
+
+  <div class="grid gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div>
+      <label for="facturacion-fecha-desde" class="mb-1 block text-sm font-semibold text-slate-700">Fecha desde</label>
+      <app-selector-fecha inputId="facturacion-fecha-desde" [formField]="filtro.fechaDesde" />
+    </div>
+    <div>
+      <label for="facturacion-fecha-hasta" class="mb-1 block text-sm font-semibold text-slate-700">Fecha hasta</label>
+      <app-selector-fecha inputId="facturacion-fecha-hasta" [formField]="filtro.fechaHasta" />
+    </div>
+    <div>
+      <p class="mb-1 block text-sm font-semibold text-slate-700">Pagó con puntos</p>
+      <app-selector-filtro-booleano [formField]="filtro.pagoConPuntos" />
+    </div>
+    <div>
+      <p class="mb-1 block text-sm font-semibold text-slate-700">Verificada</p>
+      <app-selector-filtro-booleano [formField]="filtro.verificada" />
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <div class="flex gap-2">
+      <p-button
+        label="Exportar Excel"
+        icon="pi pi-file-excel"
+        severity="success"
+        [loading]="exportando()"
+        [disabled]="sinResultados()"
+        (onClick)="exportarExcel()"
+      />
+      <p-button
+        label="Exportar PDF"
+        icon="pi pi-file-pdf"
+        severity="danger"
+        [loading]="exportando()"
+        [disabled]="sinResultados()"
+        (onClick)="exportarPdf()"
+      />
+    </div>
+    @if (errorExportacion(); as mensaje) {
+      <p class="text-xs text-red-600">{{ mensaje }}</p>
+    }
+    @if (facturaciones.error()) {
+      <p class="text-xs text-red-600">No se pudieron cargar las facturaciones.</p>
+    }
+  </div>
+
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <p-table
+      [value]="facturaciones.value() ?? []"
+      [loading]="facturaciones.isLoading()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      sortMode="single"
+      sortField="fechaOrden"
+      [sortOrder]="-1"
+      dataKey="idOrden"
+      styleClass="text-sm"
+    >
+      <ng-template #header>
+        <tr class="bg-slate-50 text-xs font-semibold uppercase text-slate-500">
+          <th class="px-4 py-3">Nro de orden</th>
+          <th class="px-4 py-3">ID función</th>
+          <th pSortableColumn="usuarioRegistrado" class="px-4 py-3">
+            Usuario registrado
+            <p-sortIcon field="usuarioRegistrado" />
+          </th>
+          <th pSortableColumn="email" class="px-4 py-3">
+            Email
+            <p-sortIcon field="email" />
+          </th>
+          <th pSortableColumn="pagoConPuntos" class="px-4 py-3">
+            Pagó con puntos
+            <p-sortIcon field="pagoConPuntos" />
+          </th>
+          <th pSortableColumn="puntosUtilizados" class="px-4 py-3">
+            Puntos utilizados
+            <p-sortIcon field="puntosUtilizados" />
+          </th>
+          <th pSortableColumn="total" class="px-4 py-3">
+            Total
+            <p-sortIcon field="total" />
+          </th>
+          <th pSortableColumn="verificada" class="px-4 py-3">
+            Verificada
+            <p-sortIcon field="verificada" />
+          </th>
+          <th pSortableColumn="precioButacas" class="px-4 py-3">
+            Precio butacas
+            <p-sortIcon field="precioButacas" />
+          </th>
+          <th pSortableColumn="precioArticulos" class="px-4 py-3">
+            Precio artículos
+            <p-sortIcon field="precioArticulos" />
+          </th>
+          <th pSortableColumn="fechaOrden" class="px-4 py-3">
+            Fecha de orden
+            <p-sortIcon field="fechaOrden" />
+          </th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-facturacion>
+        <tr [class]="claseFila(facturacion)">
+          <td class="px-4 py-3 font-mono text-xs text-slate-800">{{ facturacion.idOrden }}</td>
+          <td class="px-4 py-3 font-mono text-xs text-slate-600">{{ facturacion.idFuncion ?? '-' }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ facturacion.usuarioRegistrado ? 'Sí' : 'No' }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ facturacion.email }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ facturacion.pagoConPuntos ? 'Sí' : 'No' }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ facturacion.puntosUtilizados ?? '-' }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ facturacion.total | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ facturacion.verificada ? 'Sí' : 'No' }}</td>
+          <td class="px-4 py-3 text-slate-600">
+            {{ facturacion.precioButacas === null ? '-' : (facturacion.precioButacas | currency: 'ARS' : 'symbol-narrow' : '1.0-0') }}
+          </td>
+          <td class="px-4 py-3 text-slate-600">
+            {{ facturacion.precioArticulos === null ? '-' : (facturacion.precioArticulos | currency: 'ARS' : 'symbol-narrow' : '1.0-0') }}
+          </td>
+          <td class="px-4 py-3 text-slate-600">{{ facturacion.fechaOrden | date: 'dd/MM/yyyy HH:mm' }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="11" class="px-4 py-6 text-center text-slate-500">No hay facturaciones para los filtros elegidos.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

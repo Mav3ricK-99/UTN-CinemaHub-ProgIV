@@ -39,6 +39,9 @@ Incluye:
 | clasificacion | Clasificacion \| null | referencia a la clasificación de edad de la película |
 | promedioResenas | number | cache — sincronizado por trigger a partir de `Resena` |
 | cantidadResenas | number | cache — cantidad total de reseñas, útil para mostrar "(124 reseñas)" en la UI |
+| proximamente | (`boolean`, default `false`) — `true` si la película es
+  un estreno próximo del cine (todavía no en cartelera). Flag manual que
+  edita el admin; no se deriva de `funcion`.
 
 #### Clasificacion
 | Campo | Tipo | Notas |

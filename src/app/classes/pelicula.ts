@@ -16,4 +16,5 @@ export interface Pelicula {
   clasificacion: Clasificacion | null;
   promedioResenas: number;
   cantidadResenas: number;
+  proximamente: boolean;
 }

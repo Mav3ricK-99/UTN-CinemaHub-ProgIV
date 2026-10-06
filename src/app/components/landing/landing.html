@@ -14,6 +14,10 @@
 
   <app-informacion-cine />
 
+  @if (!peliculasProximamente.error()) {
+    <app-peliculas-proximamente [peliculas]="peliculasProximamente.value() ?? []" />
+  }
+
   @if (!funcionesPasadas.error()) {
     <app-funciones-pasadas [funciones]="funcionesPasadasUnicas()" />
   }

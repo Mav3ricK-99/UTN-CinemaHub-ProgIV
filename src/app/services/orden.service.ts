@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { Articulo } from '../classes/articulo';
+import { Facturacion } from '../classes/facturacion';
 import { calcularPrecioButacas, Funcion } from '../classes/funcion';
 import { generarCodigoOrden, Orden } from '../classes/orden';
 import { Reserva } from '../classes/reserva';
@@ -28,6 +29,32 @@ export interface OrdenConReserva {
 
 export interface FiltroOrdenes {
   idUsuario?: string;
+}
+
+export interface FiltroFacturaciones {
+  fechaDesde: Date | null;
+  fechaHasta: Date | null;
+  pagoConPuntos: boolean | null;
+  verificada: boolean | null;
+}
+
+interface FilaReservaFacturacion {
+  funcion_id: string;
+  precio_butacas: number;
+  precio_articulos: number;
+}
+
+interface FilaFacturacion {
+  id: string;
+  email_contacto: string | null;
+  total: number;
+  verificada: boolean;
+  pago_con_puntos: boolean;
+  puntos_utilizados: number | null;
+  fecha_creacion: string;
+  usuario: { email: string } | null;
+  /** PostgREST devuelve un objeto si la relación es 1 a 1, o una lista si la detecta como 1 a N. */
+  reserva: FilaReservaFacturacion | FilaReservaFacturacion[] | null;
 }
 
 interface FilaReserva {
@@ -232,6 +259,47 @@ export class OrdenService {
     const { data, error } = await consulta.order('fecha_creacion', { ascending: false }).returns<FilaOrden[]>();
     if (error) throw error;
     return data.flatMap((fila) => convertirFilaEnOrdenConReserva(fila) ?? []);
+  }
+
+  /**
+   * Devuelve las órdenes con los datos de su reserva, de la más reciente a la más antigua.
+   * Incluye las órdenes sin reserva (canceladas). `fechaHasta` incluye el día completo.
+   */
+  async obtenerFacturaciones({ fechaDesde, fechaHasta, pagoConPuntos, verificada }: FiltroFacturaciones): Promise<Facturacion[]> {
+    let consulta = this.supabase.cliente
+      .from('orden')
+      .select('id, email_contacto, total, verificada, pago_con_puntos, puntos_utilizados, fecha_creacion, usuario(email), reserva(funcion_id, precio_butacas, precio_articulos)');
+
+    if (fechaDesde) {
+      const inicioDia = new Date(fechaDesde.getFullYear(), fechaDesde.getMonth(), fechaDesde.getDate());
+      consulta = consulta.gte('fecha_creacion', inicioDia.toISOString());
+    }
+    if (fechaHasta) {
+      const inicioDiaSiguiente = new Date(fechaHasta.getFullYear(), fechaHasta.getMonth(), fechaHasta.getDate() + 1);
+      consulta = consulta.lt('fecha_creacion', inicioDiaSiguiente.toISOString());
+    }
+    if (pagoConPuntos !== null) consulta = consulta.eq('pago_con_puntos', pagoConPuntos);
+    if (verificada !== null) consulta = consulta.eq('verificada', verificada);
+
+    const { data, error } = await consulta.order('fecha_creacion', { ascending: false }).returns<FilaFacturacion[]>();
+    if (error) throw error;
+
+    return data.map((fila) => {
+      const filaReserva = Array.isArray(fila.reserva) ? fila.reserva[0] : fila.reserva;
+      return {
+        idOrden: fila.id,
+        idFuncion: filaReserva?.funcion_id ?? null,
+        usuarioRegistrado: fila.email_contacto === null,
+        email: fila.email_contacto ?? fila.usuario?.email ?? '',
+        pagoConPuntos: fila.pago_con_puntos,
+        puntosUtilizados: fila.puntos_utilizados,
+        total: fila.total,
+        verificada: fila.verificada,
+        precioButacas: filaReserva?.precio_butacas ?? null,
+        precioArticulos: filaReserva?.precio_articulos ?? null,
+        fechaOrden: new Date(fila.fecha_creacion),
+      };
+    });
   }
 
   /** Devuelve las órdenes del usuario cuya función aún no comenzó y no fueron verificadas, de la función más próxima a la más lejana. */

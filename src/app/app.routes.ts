@@ -101,6 +101,11 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'facturaciones',
+        loadComponent: () =>
+          import('./components/backoffice/facturaciones/facturaciones').then((modulo) => modulo.Facturaciones),
+      },
+      {
         path: 'funciones/nueva',
         loadComponent: () =>
           import('./components/backoffice/funciones/nueva-funcion/nueva-funcion').then(

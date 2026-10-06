@@ -2,9 +2,11 @@ import { Component, computed, inject, resource } from '@angular/core';
 
 import { Funcion } from '../../classes/funcion';
 import { FuncionService } from '../../services/funcion.service';
+import { PeliculaService } from '../../services/pelicula.service';
 import { CarteleraSlider } from './cartelera-slider/cartelera-slider';
 import { FuncionesPasadas } from './funciones-pasadas/funciones-pasadas';
 import { InformacionCine } from './informacion-cine/informacion-cine';
+import { PeliculasProximamente } from './peliculas-proximamente/peliculas-proximamente';
 
 /** Conserva solo la primera función de cada película (la lista ya viene ordenada por fecha). */
 function unaPorPelicula(funciones: Funcion[]): Funcion[] {
@@ -18,11 +20,16 @@ function unaPorPelicula(funciones: Funcion[]): Funcion[] {
 
 @Component({
   selector: 'app-landing',
-  imports: [CarteleraSlider, FuncionesPasadas, InformacionCine],
+  imports: [CarteleraSlider, FuncionesPasadas, InformacionCine, PeliculasProximamente],
   templateUrl: './landing.html',
 })
 export class Landing {
   private readonly funcionService = inject(FuncionService);
+  private readonly peliculaService = inject(PeliculaService);
+
+  protected readonly peliculasProximamente = resource({
+    loader: () => this.peliculaService.obtenerPeliculasProximamente(),
+  });
 
   protected readonly funcionesProximas = resource({
     loader: () => this.funcionService.obtenerFuncionesProximas(),

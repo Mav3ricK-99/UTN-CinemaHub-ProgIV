@@ -111,6 +111,11 @@
       }
     </div>
 
+    <div>
+      <p class="mb-1 block text-sm font-semibold text-slate-700">Próximamente a estrenarse</p>
+      <app-selector-si-no [formField]="formulario.proximamente" />
+    </div>
+
     @if (errorGeneral()) {
       <p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ errorGeneral() }}</p>
     }

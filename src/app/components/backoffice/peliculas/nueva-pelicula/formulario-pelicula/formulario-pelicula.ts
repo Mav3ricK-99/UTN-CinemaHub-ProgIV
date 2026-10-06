@@ -12,6 +12,7 @@ import { SelectorCategorias } from '../../../../shared/selector-categorias/selec
 import { SelectorClasificacion } from '../../../../shared/selector-clasificacion/selector-clasificacion';
 import { SelectorFormato } from '../../../../shared/selector-formato/selector-formato';
 import { SelectorIdioma } from '../../../../shared/selector-idioma/selector-idioma';
+import { SelectorSiNo } from '../../../../shared/selector-si-no/selector-si-no';
 import { PrevisualizacionPelicula } from './previsualizacion-pelicula/previsualizacion-pelicula';
 import { alMenosUnaCategoria } from './validadores-pelicula';
 
@@ -27,6 +28,7 @@ interface ModeloPelicula {
   idioma: IdiomaPelicula | null;
   categorias: Categoria[];
   clasificacion: Clasificacion | null;
+  proximamente: boolean;
 }
 
 function crearModeloVacio(): ModeloPelicula {
@@ -38,6 +40,7 @@ function crearModeloVacio(): ModeloPelicula {
     idioma: 'Castellano',
     categorias: [],
     clasificacion: null,
+    proximamente: false,
   };
 }
 
@@ -51,6 +54,7 @@ function crearModeloVacio(): ModeloPelicula {
     SelectorIdioma,
     SelectorClasificacion,
     SelectorCategorias,
+    SelectorSiNo,
     PrevisualizacionPelicula,
   ],
   templateUrl: './formulario-pelicula.html',
@@ -75,7 +79,8 @@ export class FormularioPelicula {
 
   /** Arma una `Pelicula` con los datos ingresados hasta el momento, para la previsualización en vivo. */
   protected readonly peliculaPreview = computed<Pelicula>(() => {
-    const { nombre, sinopsis, duracionMinutos, formato, idioma, categorias, clasificacion } = this.modelo();
+    const { nombre, sinopsis, duracionMinutos, formato, idioma, categorias, clasificacion, proximamente } =
+      this.modelo();
     return {
       id: 'preview',
       nombre: nombre.trim() || 'Nombre de la película',
@@ -88,6 +93,7 @@ export class FormularioPelicula {
       clasificacion,
       promedioResenas: 0,
       cantidadResenas: 0,
+      proximamente,
     };
   });
 
@@ -127,7 +133,8 @@ export class FormularioPelicula {
             return undefined;
           }
 
-          const { nombre, sinopsis, duracionMinutos, formato, idioma, categorias, clasificacion } = this.modelo();
+          const { nombre, sinopsis, duracionMinutos, formato, idioma, categorias, clasificacion, proximamente } =
+            this.modelo();
           if (!duracionMinutos || !formato || !idioma || !clasificacion) return undefined;
 
           try {
@@ -139,6 +146,7 @@ export class FormularioPelicula {
               idioma,
               categorias,
               clasificacion,
+              proximamente,
               imagen,
             });
             this.creada.emit(pelicula);
